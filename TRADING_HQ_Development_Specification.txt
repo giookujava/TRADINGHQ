@@ -1,0 +1,783 @@
+# TRADING HQ — Complete Website Development Specification
+
+## 1. Project Overview
+
+I want to build a personal trading journal and analytics platform called **TRADING HQ**.
+
+This must be a fully functional, private website designed for my personal trading journey. It should help me record every trade, analyze my performance, understand my mistakes, identify patterns and improve my trading over time.
+
+I also want an integrated AI assistant that can access and analyze the actual information stored in my website. I should be able to ask questions about my trading history in natural language and receive answers based on my real data.
+
+The platform must be designed with future integrations for:
+
+- **Lucid Trading** — my intended prop firm.
+- **Tradovate** — the platform I intend to use for executing my actual trades.
+- **TradingView** — for chart analysis, alerts and potentially sending trade-related information.
+
+I am currently learning and backtesting. Therefore, the website must work perfectly without any external integrations initially. I want to be able to add integrations later without rebuilding the entire application.
+
+This is a personal project, not a commercial product. Prioritize functionality, reliability, simplicity, privacy and accurate analytics over unnecessary features.
+
+## 2. Technology and Development Requirements
+
+Preferred technology:
+
+- Frontend: React / Next.js or another suitable modern framework.
+- Styling: Tailwind CSS.
+- Backend and database: Supabase.
+- Authentication: Supabase Auth.
+- File and screenshot storage: Supabase Storage.
+- AI: Secure server-side integration with an appropriate AI API.
+- Hosting: A suitable low-cost or free hosting solution.
+
+The developer can recommend alternatives if they are technically better.
+
+### Important requirements
+
+1. Build a real application, not a static visual mockup.
+2. Every button, form, filter, chart, upload and navigation element must work.
+3. Store information in a real database.
+4. Implement authentication so my trading data is private.
+5. Use proper database security and Row Level Security (RLS).
+6. Never expose API keys, passwords or secret credentials in frontend code.
+7. Make the application responsive, but prioritize desktop usage.
+8. Include data export and backup functionality.
+9. Avoid unnecessary paid services wherever possible.
+10. Design the database and backend so future integrations can be added without major architectural changes.
+
+Start with the simplest functional version and develop it in stages.
+
+## 3. Main Application Structure
+
+The website should have the following main sections:
+
+1. Dashboard
+2. Trade Journal
+3. Daily Preparation
+4. Analytics
+5. Strategy & Knowledge Base
+6. Financial Management
+7. AI Trading Assistant
+8. Account & Integrations Settings
+
+Use a clean, professional, dark trading-terminal design.
+
+The interface should be modern and easy to navigate. Avoid excessive animations, clutter and unnecessary information.
+
+## 4. Dashboard
+
+The dashboard should give me an immediate overview of my trading performance.
+
+### Main statistics
+
+- Total trades.
+- Winning trades.
+- Losing trades.
+- Win rate.
+- Gross profit.
+- Gross loss.
+- Net profit/loss.
+- Total commissions and fees.
+- Average winning trade.
+- Average losing trade.
+- Average R multiple.
+- Profit factor.
+- Maximum drawdown.
+- Current account balance.
+- Current equity.
+
+### Performance charts
+
+Include:
+
+- Equity curve.
+- Cumulative profit/loss.
+- Daily performance.
+- Weekly performance.
+- Monthly performance.
+- Yearly performance.
+- Drawdown chart.
+- Winning versus losing trades.
+
+### Filters
+
+Allow filtering by:
+
+- Date range.
+- Instrument.
+- Trading account.
+- Backtesting, demo, evaluation or funded trading.
+- Trading session.
+- Long or short.
+- Strategy or setup.
+
+All dashboard statistics must update when filters change.
+
+Do not use fake statistics or placeholder values once real data exists.
+
+## 5. Trade Journal
+
+This is one of the most important parts of the entire application.
+
+I want to record every trade, including backtesting trades, demo trades and actual trades.
+
+The journal must be flexible. Do not force every trade into one specific strategy or one rigid setup.
+
+Different market conditions can produce different setups. I want to document what I actually observed and why I entered a trade.
+
+### Basic trade information
+
+Each trade should support:
+
+- Date.
+- Instrument (MNQ, MES, ES, NQ, etc.).
+- Direction (Long / Short).
+- Trading session.
+- Entry time.
+- Exit time.
+- Entry price.
+- Exit price.
+- Stop-loss.
+- Take-profit.
+- Number of contracts.
+- Gross P/L.
+- Commissions and fees.
+- Net P/L.
+- Planned risk.
+- R multiple.
+- Holding duration.
+- Account.
+- Trade type (Backtest / Demo / Evaluation / Funded / Live).
+- Strategy or setup name.
+
+Support multiple entries, partial exits, scaling in and scaling out.
+
+A trade must not be limited to one entry and one exit.
+
+### Market analysis and ICT concepts
+
+Include optional fields for:
+
+- Daily bias.
+- Higher-timeframe bias.
+- Market structure.
+- Previous Day High (PDH).
+- Previous Day Low (PDL).
+- Previous Week High (PWH).
+- Previous Week Low (PWL).
+- Asia session high/low.
+- London session high/low.
+- Liquidity sweep.
+- Buy-side liquidity.
+- Sell-side liquidity.
+- Displacement.
+- Market Structure Shift (MSS).
+- Break of Structure (BOS).
+- Fair Value Gap (FVG).
+- Order Block (OB).
+- Premium / Discount.
+- SMT divergence.
+- Kill zone.
+- Entry confirmation.
+- Higher-timeframe and lower-timeframe alignment.
+
+These should be optional and editable.
+
+I may also use concepts outside ICT, so allow custom tags and custom fields.
+
+### Psychology and execution
+
+Include:
+
+- Emotional state before entry.
+- Emotional state during the trade.
+- Emotional state after the trade.
+- Confidence level.
+- Was the trade planned?
+- Did I follow my rules?
+- Did I enter too early?
+- Did I exit too early?
+- Did I move my stop-loss?
+- Did I revenge trade?
+- Did I overtrade?
+- What mistakes did I make?
+- What did I learn?
+
+Allow written notes for every trade.
+
+### Screenshots
+
+I want to attach screenshots to individual trades.
+
+Support:
+
+- Before entry.
+- During the trade.
+- After the trade.
+- Multiple screenshots per trade.
+- Screenshot descriptions.
+- Uploading images from my computer.
+
+I want to be able to open a trade later and see all its screenshots and notes together.
+
+## 6. Daily Preparation
+
+Create a separate section for daily trading preparation.
+
+This should let me document my analysis before trading and compare it with what actually happened.
+
+### Daily preparation fields
+
+- Date.
+- Instrument.
+- Daily bias.
+- Higher-timeframe analysis.
+- Important liquidity levels.
+- Expected direction.
+- Potential liquidity targets.
+- Previous Day High/Low.
+- Previous Week High/Low.
+- Asia range.
+- London range.
+- Important economic news.
+- Expected volatility.
+- Planned trading session.
+- Potential setups.
+- General market observations.
+- Daily trading plan.
+
+### My four main analysis questions
+
+Include these questions prominently:
+
+1. Where does the market want to go?
+2. Where does it want to go from?
+3. Why is it going in that direction?
+4. When does it go in that direction?
+
+I want to answer these questions every trading day.
+
+### End-of-day review
+
+After trading, allow me to record:
+
+- What actually happened?
+- Was my daily bias correct?
+- Did the market reach my liquidity target?
+- Did I identify the correct setup?
+- Did I follow my plan?
+- What could I have done better?
+- What did I learn today?
+
+I want to compare my original preparation with actual market behavior.
+
+Use **America/New_York** as the primary trading timezone, including automatic daylight-saving adjustments. Do not make me manually calculate the difference between New York and Tbilisi time.
+
+## 7. Advanced Analytics
+
+This section should help me discover what is working and what is not.
+
+I want to analyze my trading performance from different perspectives.
+
+### Performance by instrument
+
+For example:
+
+- MNQ performance.
+- MES performance.
+- ES performance.
+- Other instruments I add later.
+
+### Performance by session
+
+Compare:
+
+- Asian session.
+- London session.
+- New York session.
+- New York AM.
+- New York PM.
+
+### Performance by trading conditions
+
+Analyze results based on:
+
+- Daily bias.
+- Long versus short.
+- Liquidity sweeps.
+- MSS.
+- BOS.
+- FVG.
+- Order Blocks.
+- SMT.
+- Displacement.
+- Kill zones.
+- Entry confirmations.
+- Market conditions.
+- Psychology.
+- Execution mistakes.
+- Holding duration.
+
+### Advanced statistics
+
+Include:
+
+- Win rate.
+- Average R.
+- Expectancy.
+- Profit factor.
+- Average winner.
+- Average loser.
+- Maximum drawdown.
+- Consecutive wins.
+- Consecutive losses.
+- Best and worst trading days.
+- Best and worst sessions.
+- Best and worst instruments.
+
+Allow me to compare different periods and different conditions.
+
+For example:
+
+- Compare my last 30 trades with my previous 30.
+- Compare MNQ and MES.
+- Compare my New York AM performance with London.
+- Show my performance when I follow my trading plan versus when I do not.
+- Identify my most common mistakes.
+
+Important: Do not claim that a condition causes better results just because it appears alongside better results in a small sample. Display sample sizes and explain when there is insufficient data.
+
+## 8. Strategy & Knowledge Base
+
+Create a personal knowledge base where I can organize my trading education.
+
+I want to store:
+
+- ICT concepts.
+- Trading strategies.
+- Entry models.
+- Personal trading rules.
+- Examples.
+- Screenshots.
+- Explanations.
+- Notes from courses and mentors.
+- Lessons learned.
+
+Allow me to connect specific trades to concepts or strategies in this section.
+
+For example, I should be able to open my FVG knowledge page and see all trades where I used an FVG.
+
+Make everything editable.
+
+## 9. Financial Management
+
+I want to track my trading capital independently from my trading performance.
+
+Support:
+
+- Starting balance.
+- Current balance.
+- Deposits.
+- Withdrawals.
+- Trading profits.
+- Trading losses.
+- Commissions.
+- Platform fees.
+- Other expenses.
+
+Deposits and withdrawals must never be counted as trading profits or losses.
+
+Support multiple accounts and keep their statistics separate.
+
+I want to distinguish:
+
+- Personal trading account.
+- Demo account.
+- Backtesting account.
+- Prop firm evaluation account.
+- Funded account.
+
+Allow me to see both individual account performance and combined performance.
+
+## 10. Lucid Trading & Tradovate Integration
+
+This is an important future development requirement.
+
+My intended prop firm is **Lucid Trading**, and I intend to use **Tradovate for executing my actual trades**.
+
+I want the application designed to support these integrations.
+
+### Tradovate integration
+
+In the future, I want to connect my Tradovate account so the website can automatically retrieve available trading information.
+
+Potentially import:
+
+- Executed trades.
+- Entry prices.
+- Exit prices.
+- Entry and exit timestamps.
+- Instruments.
+- Long/short direction.
+- Contract quantities.
+- Partial fills.
+- Realized P/L.
+- Commissions and fees, where available.
+- Account balances and other supported account information.
+
+I want imported trades to appear automatically in my journal.
+
+Avoid duplicate trades when the same information is received more than once.
+
+Allow me to review imported information and add my own analysis, screenshots, psychology notes and lessons.
+
+### Lucid Trading integration
+
+Design the system to support Lucid Trading accounts.
+
+I want to track:
+
+- Account type.
+- Evaluation or funded status.
+- Account size.
+- Starting balance.
+- Current balance.
+- Profit target.
+- Daily loss limit.
+- Maximum drawdown.
+- Remaining drawdown allowance.
+- Progress toward profit target.
+- Account status.
+- Payouts, when applicable.
+
+Where supported, synchronize account information automatically.
+
+### Important integration rules
+
+Do not assume that every Lucid account exposes the same API or integration options.
+
+Before implementing an integration, verify:
+
+- Official API availability.
+- Supported authentication method.
+- Tradovate account permissions.
+- Prop firm restrictions.
+- Data availability.
+- Whether read-only access is possible.
+
+Prefer official APIs and authorized integrations.
+
+Never ask me to share account passwords directly with the developer.
+
+Use secure authorization, server-side credentials and the minimum permissions required.
+
+If an automatic integration is not available, support CSV imports and manual entry.
+
+**Do not build fake integrations or pretend that data is synchronized when it is not.**
+
+## 11. TradingView Integration
+
+I also want to support TradingView.
+
+Initially, this can be optional.
+
+Future possibilities:
+
+- Receive TradingView webhook alerts.
+- Save alert information.
+- Associate alerts with instruments and timestamps.
+- Link alerts to journal entries.
+- Store chart screenshots.
+- Compare my TradingView analysis with actual execution data.
+
+Important distinction:
+
+TradingView alerts are not the same as confirmed broker executions.
+
+The application must distinguish between:
+
+- TradingView alerts.
+- Actual Tradovate executions.
+- Manually recorded trades.
+
+Do not treat an alert as an executed trade.
+
+Design the system so these sources can eventually work together.
+
+## 12. AI Trading Assistant
+
+This is one of the most important features.
+
+I want an AI assistant directly inside the website.
+
+It should be able to access my actual journal, daily preparation, screenshots, trading statistics, account information and knowledge base, subject to my permissions.
+
+I want to communicate with it naturally, just like I communicate with ChatGPT.
+
+### Example questions
+
+- Analyze my last 30 trades.
+- What are my biggest recurring mistakes?
+- Why am I losing more money on MNQ than MES?
+- What do my best trades have in common?
+- Which trading session is most profitable for me?
+- Am I following my trading plan?
+- Compare my last two weeks.
+- Show me my most successful setups.
+- Do I perform better on long or short trades?
+- What happens when I enter without waiting for displacement?
+- Analyze my daily bias accuracy.
+- Compare my original daily analysis with what actually happened.
+- Find examples of my best FVG trades.
+- What should I focus on improving based on my recent performance?
+
+### AI capabilities
+
+The assistant should:
+
+1. Retrieve relevant records from the database.
+2. Calculate statistics using actual trade data.
+3. Analyze patterns and recurring mistakes.
+4. Compare different periods.
+5. Analyze screenshots when supported by the AI model.
+6. Reference specific trades when explaining its conclusions.
+7. Use my knowledge base and personal rules as context.
+8. Remember the context of the current conversation.
+9. Support follow-up questions.
+10. Explain its reasoning clearly.
+
+### Accuracy requirements
+
+This is extremely important.
+
+The AI must never invent trades, statistics, screenshots or account information.
+
+It must distinguish between:
+
+- Verified facts from my records.
+- Calculated statistics.
+- Possible interpretations.
+- Recommendations.
+- Insufficient data.
+
+If I have only five trades, it should not confidently claim that a particular strategy is profitable.
+
+When answering statistical questions, it should show the relevant sample size and period.
+
+The assistant should be focused on analyzing my trading behavior and performance, not simply giving generic trading advice.
+
+### AI data architecture
+
+Do not simply give the AI unrestricted database access.
+
+Build a secure backend that retrieves the necessary records and performs calculations before providing relevant context to the AI.
+
+The AI should have access only to the information required for the question.
+
+Keep API keys on the server.
+
+Track AI usage and make it possible to limit usage to control costs.
+
+## 13. Account Settings & Integrations
+
+Create a settings page where I can manage:
+
+- Personal information.
+- Trading timezone.
+- Default currency.
+- Default instruments.
+- Trading accounts.
+- Custom tags.
+- Custom fields.
+- Strategies.
+- Integration connections.
+- AI settings.
+- Data exports.
+- Backups.
+
+For integrations, show:
+
+- Connected or disconnected status.
+- Last successful synchronization.
+- Synchronization errors.
+- Available account information.
+- Manual synchronization option, where supported.
+
+## 14. Data Accuracy and Trading Calculations
+
+Accuracy is critical.
+
+Build a reliable calculation engine for futures trades.
+
+Do not hardcode one instrument's contract specifications into every calculation.
+
+Store configurable instrument specifications, including:
+
+- Tick size.
+- Tick value.
+- Point value.
+- Contract multiplier.
+- Commission structure.
+- Other relevant fees.
+
+For example:
+
+MNQ has a $2 value per index point per contract.
+
+If I trade 2 MNQ contracts and capture 20 points, the gross profit should be:
+
+2 contracts × 20 points × $2 = $80 gross profit.
+
+Fees must then be deducted to calculate net profit.
+
+Make instrument specifications editable so I can update them if necessary.
+
+Test all calculations with known examples.
+
+Also ensure:
+
+- Partial exits are calculated correctly.
+- Multiple entries are calculated correctly.
+- Fees are not deducted twice.
+- Deposits and withdrawals do not distort trading performance.
+- Imported trades are not duplicated.
+- Account balances reconcile with available source data.
+
+## 15. Design and User Experience
+
+I want a professional dark interface.
+
+Design inspiration:
+
+- Modern trading terminals.
+- Professional financial dashboards.
+- Clean analytical platforms.
+
+Design requirements:
+
+- Dark background.
+- Subtle contrast.
+- Readable typography.
+- Clear charts.
+- Compact but organized tables.
+- Consistent spacing.
+- Minimal unnecessary decoration.
+- Easy navigation.
+- Desktop-first layout.
+- Responsive mobile experience.
+
+The website should feel like my personal trading control center.
+
+Do not sacrifice functionality for visual appearance.
+
+## 16. Development Roadmap
+
+Do not attempt to build everything at once.
+
+Develop the project in phases.
+
+### Phase 1 — Functional Foundation
+
+Build:
+
+- Authentication.
+- Database.
+- Dashboard.
+- Trade journal.
+- Manual trade entry.
+- Trade editing and deletion.
+- Screenshot uploads.
+- Daily preparation.
+- Basic statistics.
+- Data export.
+
+At the end of this phase, I should be able to use the website for my daily trading journal without any external integrations.
+
+### Phase 2 — Advanced Analytics
+
+Build:
+
+- Advanced performance filters.
+- Instrument comparisons.
+- Session comparisons.
+- Strategy performance.
+- Psychology analysis.
+- Drawdown analytics.
+- Financial management.
+- Multiple trading accounts.
+
+### Phase 3 — AI Assistant
+
+Build:
+
+- AI chat interface.
+- Secure database retrieval.
+- Statistical analysis.
+- Trade comparisons.
+- Screenshot analysis.
+- Knowledge base integration.
+- Follow-up conversation context.
+- AI usage tracking.
+
+### Phase 4 — External Integrations
+
+Build and test:
+
+- Tradovate integration.
+- Lucid Trading account tracking and available integrations.
+- TradingView webhook support.
+- CSV imports.
+- Synchronization and duplicate prevention.
+
+Only implement integrations after verifying the actual API and authorization requirements.
+
+## 17. Testing and Final Requirements
+
+Before considering the application complete:
+
+- Test every form.
+- Test every button.
+- Test every filter.
+- Test all calculations.
+- Test screenshot uploads.
+- Test editing and deleting trades.
+- Test multiple accounts.
+- Test date and timezone handling.
+- Test database security.
+- Test data exports.
+- Test AI responses against known records.
+- Test duplicate prevention for imported trades.
+
+Create sample data for testing, but clearly label it as sample data and make it removable.
+
+Do not mix sample data with my actual trading records.
+
+The website must be usable even if I never connect Tradovate or Lucid.
+
+External integrations and AI must be modular, so the basic journal continues working if an integration or AI service is unavailable.
+
+## FINAL DEVELOPMENT INSTRUCTION
+
+Start by designing the database structure and application architecture.
+
+Then build Phase 1 as a fully functional application.
+
+Do not spend all development credits creating a beautiful mockup with non-functional buttons.
+
+Prioritize a working foundation that can grow into a complete personal trading platform.
+
+Before moving to the next phase, show me what has been completed, explain what works, identify any limitations and test the existing functionality.
+
+The final goal is to have one central platform where I can:
+
+1. Prepare for the trading day.
+2. Analyze the market.
+3. Record every trade automatically or manually.
+4. Review my execution.
+5. Track my Lucid Trading accounts.
+6. Synchronize Tradovate executions when supported.
+7. Analyze my performance through advanced statistics.
+8. Ask an AI assistant questions about my own trading history.
+9. Identify mistakes and continuously improve.
+
+**Build TRADING HQ as a real, reliable personal trading platform — not just another trading journal template.**
