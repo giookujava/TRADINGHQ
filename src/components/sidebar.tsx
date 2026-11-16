@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { setSidebarCollapsed } from "@/lib/theme";
+import { BrandLogo, BrandMark } from "./brand";
 import { cx } from "./ui";
 
 type Item = { href: string; label: string; icon: typeof LayoutDashboard; phase?: number };
@@ -53,18 +54,11 @@ function Clock({ tz }: { tz: string }) {
   );
 }
 
-function Brand() {
+function Brand({ onNavigate }: { onNavigate: () => void }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="TRADING HQ home">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-fg">
-        <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 12 6 7.5l3 2.5L14 4" />
-          <path d="M10.5 4H14v3.5" />
-        </svg>
-      </span>
-      <span className="text-[13px] font-semibold tracking-[0.14em] collapsed:md:hidden">
-        TRADING <span className="text-accent">HQ</span>
-      </span>
+    <Link href="/" onClick={onNavigate} className="flex items-center rounded-md" aria-label="TRADING HQ — go to Dashboard" title="Dashboard">
+      <BrandLogo className="h-8 collapsed:md:hidden" />
+      <BrandMark className="hidden h-9 collapsed:md:flex" />
     </Link>
   );
 }
@@ -90,8 +84,8 @@ export function Sidebar({ tradingTz, displayTz, mobileOpen, onClose }: {
         )}
         aria-label="Main navigation"
       >
-        <div className="flex h-14 items-center justify-between px-4 collapsed:md:justify-center collapsed:md:px-0">
-          <Brand />
+        <div className="flex h-14 items-center justify-between pr-4 pl-[21px] collapsed:md:justify-center collapsed:md:px-0">
+          <Brand onNavigate={onClose} />
           <button type="button" className="btn btn-ghost btn-icon md:hidden" onClick={onClose} aria-label="Close navigation">
             <X className="h-4 w-4" />
           </button>

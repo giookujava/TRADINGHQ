@@ -60,6 +60,14 @@ Supabase (Postgres + Auth + Storage) via `@supabase/ssr` · zod 4 · Recharts 3 
 - Icons: `lucide-react` (pinned 1.59.0). Fonts: Geist + Geist Mono (`.num` for all numbers).
 - Unbuilt sections stay disabled in the sidebar with a phase badge — do not add fake pages.
 
+## Branding
+- Source of truth: `public/logo.svg` (official logo, CorelDRAW export, 2400×1600 canvas — never edit it).
+- `node scripts/build-brand.mjs` regenerates `public/brand/logo-{dark,light}.svg` (full lock-up cropped to the
+  artwork), `public/brand/mark{,-light}.svg` (candlestick symbol only) and the favicon `src/app/icon.svg`
+  (symbol; recolours via `prefers-color-scheme`). Re-run it if the logo file changes.
+- Use `<BrandLogo className="h-8" />` / `<BrandMark />` from `src/components/brand.tsx`; size by height only.
+  Both theme variants render and CSS shows the right one (no flash). Sidebar 32px, mobile bar 20–24px, login 48–56px.
+
 ## Project structure
 ```
 supabase/migrations/      SQL migrations (apply in Supabase SQL editor)

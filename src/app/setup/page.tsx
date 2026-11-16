@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandLogo } from "@/components/brand";
 import { supabaseEnv } from "@/lib/env";
 
 export const metadata = { title: "Setup required" };
@@ -8,9 +9,7 @@ export default function SetupPage() {
   if (supabaseEnv()) redirect("/");
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">
-      <div className="text-xl font-semibold tracking-[0.2em]">
-        TRADING <span className="text-accent">HQ</span>
-      </div>
+      <BrandLogo className="h-10" />
       <h1 className="mt-6 text-lg font-semibold">Supabase is not configured yet</h1>
       <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted">
         <li>Create a free project at supabase.com.</li>

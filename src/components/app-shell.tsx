@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { signOut } from "@/app/login/actions";
+import { BrandLogo } from "./brand";
 import { Sidebar } from "./sidebar";
 import { ThemeSwitcher } from "./theme-switcher";
 import { ToastProvider } from "./toast";
@@ -70,7 +71,7 @@ export function AppShell({ children, email, displayName, tradingTz, displayTz }:
             <button type="button" className="btn btn-ghost btn-icon md:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
               <Menu className="h-5 w-5" />
             </button>
-            <span className="text-[13px] font-semibold tracking-[0.14em] md:hidden">TRADING <span className="text-accent">HQ</span></span>
+            <Link href="/" className="flex shrink-0 items-center md:hidden" aria-label="TRADING HQ — go to Dashboard"><BrandLogo className="h-5 sm:h-6" /></Link>
             <div className="ml-auto flex items-center gap-2">
               {!onNewTrade ? (
                 <Link href="/journal/new" className="btn btn-primary">
