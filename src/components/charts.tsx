@@ -1,129 +1,157 @@
 "use client";
 /**
- * Dashboard charts (Recharts). Colour note: profit/loss green/red is not colour-blind safe on
- * its own, so polarity is ALWAYS also encoded by position (above/below the zero line) and by
- * signed labels in tooltips. Single-series charts carry no legend; the card title names them.
+ * Dashboard charts (Recharts), theme-aware via CSS custom properties.
+ * Colour note: profit/loss green/red is not colour-blind safe on its own, so polarity is ALWAYS also
+ * encoded by position (above/below the zero line) and by signed labels in tooltips/tables.
+ * Single-series charts carry no legend; the card title names them.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import type { EquityPoint, PeriodBucket } from "@/lib/calc/stats";
 import { fmtMoney } from "@/lib/format";
+import { Segmented } from "./toast";
 import { cx } from "./ui";
 
-const C = {
-  accent: "#4cc2d6",
-  profit: "#2fbf71",
-  loss: "#ef5350",
-  grid: "#1f2632",
-  axis: "#5b6577",
-  text: "#dbe1ea",
-  panel: "#151a23",
-};
+type Palette = { line: string; profit: string; loss: string; grid: string; axis: string; surface: string; faint: string };
 
-const axisProps = { stroke: C.axis, tick: { fill: C.axis, fontSize: 11 }, tickLine: false, axisLine: { stroke: C.grid } } as const;
+function readPalette(): Palette {
+  const s = getComputedStyle(document.documentElement);
+  const v = (n: string) => s.getPropertyValue(n).trim();
+  return { line: v("--chart-line"), profit: v("--profit"), loss: v("--loss"), grid: v("--chart-grid"), axis: v("--chart-axis"), surface: v("--surface"), faint: v("--faint") };
+}
+const FALLBACK: Palette = { line: "#29b9ca", profit: "#2fc46f", loss: "#f26060", grid: "#1b2430", axis: "#6f7d93", surface: "#131b24", faint: "#6f7d93" };
+
+/** Current chart palette; re-reads when the theme changes. */
+function usePalette(): Palette {
+  const [p, setP] = useState<Palette>(FALLBACK);
+  useEffect(() => {
+    const update = () => setP(readPalette());
+    const t = setTimeout(update, 0);
+    window.addEventListener("thq-theme-change", update);
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", update);
+    return () => { clearTimeout(t); window.removeEventListener("thq-theme-change", update); mq.removeEventListener("change", update); };
+  }, []);
+  return p;
+}
+
 const compactUsd = (v: number) => {
   const a = Math.abs(v);
-  const s = a >= 1000 ? `$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `$${a.toFixed(0)}`;
+  const s = a >= 1_000_000 ? `$${(a / 1_000_000).toFixed(1)}M` : a >= 1000 ? `$${(a / 1000).toFixed(a >= 10000 ? 0 : 1)}k` : `$${a.toFixed(0)}`;
   return v < 0 ? `−${s}` : s;
 };
+const shortDate = (d: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return "";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${d}T12:00:00Z`));
+};
+const periodLabel = (key: string) => (/^\d{4}-\d{2}-\d{2}$/.test(key) ? shortDate(key) : /^\d{4}-\d{2}$/.test(key)
+  ? new Intl.DateTimeFormat("en-US", { month: "short", year: "2-digit", timeZone: "UTC" }).format(new Date(`${key}-15T12:00:00Z`))
+  : key);
 
-function Tip({ active, payload, label, render }: { active?: boolean; payload?: { payload: unknown }[]; label?: string | number; render: (p: never, label?: string | number) => React.ReactNode }) {
+function Tip({ active, payload, render }: { active?: boolean; payload?: { payload: unknown }[]; render: (p: never) => React.ReactNode }) {
   if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-md border border-line-strong bg-panel-2 px-2.5 py-1.5 text-xs shadow-lg">
-      {render(payload[0].payload as never, label)}
-    </div>
-  );
+  return <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-pop">{render(payload[0].payload as never)}</div>;
 }
 
-function Tabs<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+function ChartCard({ title, subtitle, actions, children, empty, height = "h-64", className }: {
+  title: string; subtitle?: React.ReactNode; actions?: React.ReactNode; children: React.ReactNode; empty?: boolean; height?: string; className?: string;
+}) {
   return (
-    <div className="flex rounded-md border border-line p-0.5" role="tablist">
-      {options.map(([v, l]) => (
-        <button key={v} type="button" role="tab" aria-selected={value === v} onClick={() => onChange(v)}
-          className={cx("rounded px-2 py-0.5 text-[11px]", value === v ? "bg-panel-2 text-fg" : "text-muted hover:text-fg")}>
-          {l}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function ChartCard({ title, actions, children, empty }: { title: string; actions?: React.ReactNode; children: React.ReactNode; empty?: boolean }) {
-  return (
-    <section className="card">
-      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-        <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">{title}</h2>
+    <section className={cx("card flex flex-col", className)}>
+      <header className="flex flex-wrap items-start justify-between gap-2 px-5 pt-4">
+        <div>
+          <h2 className="text-sm font-semibold">{title}</h2>
+          {subtitle ? <p className="mt-0.5 text-xs text-muted">{subtitle}</p> : null}
+        </div>
         {actions}
       </header>
-      <div className="h-64 px-2 py-3">
+      <div className={cx("px-2 pt-3 pb-3", height)}>
         {empty ? <div className="flex h-full items-center justify-center text-sm text-faint">No closed trades in this selection.</div> : children}
       </div>
     </section>
   );
 }
 
-export function EquityChart({ points, startingBalance }: { points: EquityPoint[]; startingBalance: number }) {
-  const [mode, setMode] = useState<"equity" | "cumulative">("equity");
+const axis = (p: Palette) => ({ stroke: p.grid, tick: { fill: p.axis, fontSize: 11 }, tickLine: false, axisLine: false }) as const;
+
+export function EquityChart({ points, startingBalance, singleAccount }: { points: EquityPoint[]; startingBalance: number; singleAccount: boolean }) {
+  const p = usePalette();
+  const [mode, setMode] = useState<"equity" | "cumulative">(singleAccount ? "equity" : "cumulative");
   const key = mode === "equity" ? "equity" : "cumulative";
-  const data = [{ index: 0, date: "start", pnl: 0, cumulative: 0, equity: startingBalance, drawdown: 0, tradeId: "" }, ...points];
+  const base = mode === "equity" ? startingBalance : 0;
+  const data = [{ index: 0, date: points[0]?.date ?? "", pnl: 0, cumulative: 0, equity: startingBalance, drawdown: 0, tradeId: "" }, ...points];
+  const last = data[data.length - 1]?.[key] ?? base;
+  const up = last >= base;
+  const stroke = p.line;
   return (
     <ChartCard
       title={mode === "equity" ? "Equity curve" : "Cumulative P/L"}
+      subtitle={points.length ? `${points.length} closed trade${points.length === 1 ? "" : "s"} · ${shortDate(points[0].date)} – ${shortDate(points[points.length - 1].date)}` : undefined}
       empty={!points.length}
-      actions={<Tabs value={mode} onChange={setMode} options={[["equity", "Equity"], ["cumulative", "Cumulative P/L"]]} />}
+      height="h-80"
+      actions={<Segmented label="Curve" value={mode} onChange={setMode} items={[["equity", "Equity"], ["cumulative", "Cumulative P/L"]]} />}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 16, left: 4, bottom: 0 }}>
           <defs>
             <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={C.accent} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={C.accent} stopOpacity={0} />
+              <stop offset="0%" stopColor={stroke} stopOpacity={0.22} />
+              <stop offset="100%" stopColor={stroke} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke={C.grid} vertical={false} />
-          <XAxis dataKey="index" {...axisProps} tickFormatter={(v) => (v === 0 ? "" : `#${v}`)} minTickGap={24} />
-          <YAxis {...axisProps} width={64} tickFormatter={compactUsd} domain={["auto", "auto"]} />
-          <ReferenceLine y={mode === "equity" ? startingBalance : 0} stroke={C.axis} strokeDasharray="3 3" />
+          <CartesianGrid stroke={p.grid} vertical={false} />
+          <XAxis
+            dataKey="index"
+            {...axis(p)}
+            type="number"
+            domain={[0, "dataMax"]}
+            allowDecimals={false}
+            tickFormatter={(i: number) => shortDate(data[Math.round(i)]?.date ?? "")}
+            minTickGap={40}
+          />
+          <YAxis {...axis(p)} width={62} tickFormatter={compactUsd} domain={["auto", "auto"]} />
+          <ReferenceLine y={base} stroke={p.axis} strokeDasharray="3 4" strokeOpacity={0.7} />
           <Tooltip
-            cursor={{ stroke: C.axis, strokeDasharray: "3 3" }}
-            content={<Tip render={(p: EquityPoint) => (
+            cursor={{ stroke: p.axis, strokeDasharray: "3 3" }}
+            content={<Tip render={(d: EquityPoint) => (
               <>
-                <div className="text-muted">{p.index === 0 ? "Start" : `Trade #${p.index} · ${p.date}`}</div>
-                <div className="num">{mode === "equity" ? "Equity" : "Cumulative"}: {fmtMoney(p[key])}</div>
-                {p.index ? <div className="num">Trade: {fmtMoney(p.pnl, "USD", true)}</div> : null}
+                <div className="text-muted">{d.index === 0 ? "Start" : `Trade #${d.index} · ${shortDate(d.date)}`}</div>
+                <div className="num mt-0.5 font-semibold">{mode === "equity" ? "Equity" : "Cumulative"} {fmtMoney(d[key])}</div>
+                {d.index ? <div className={cx("num", d.pnl > 0 ? "text-profit" : d.pnl < 0 ? "text-loss" : "")}>Trade {fmtMoney(d.pnl, "USD", true)}</div> : null}
               </>
             )} />}
           />
-          <Area type="linear" dataKey={key} stroke={C.accent} strokeWidth={2} fill="url(#eqFill)" dot={false} activeDot={{ r: 4, stroke: C.panel, strokeWidth: 2 }} isAnimationActive={false} />
+          <Area type="monotone" dataKey={key} stroke={stroke} strokeWidth={2} fill="url(#eqFill)" dot={false}
+            activeDot={{ r: 4, stroke: p.surface, strokeWidth: 2, fill: stroke }} isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
+      <span className="sr-only">Curve ends {up ? "above" : "below"} its starting level.</span>
     </ChartCard>
   );
 }
 
 export function DrawdownChart({ points }: { points: EquityPoint[] }) {
-  const data = [{ index: 0, drawdown: 0, date: "start" }, ...points];
+  const p = usePalette();
+  const data = [{ index: 0, drawdown: 0, date: points[0]?.date ?? "" }, ...points];
   return (
-    <ChartCard title="Drawdown from peak" empty={!points.length}>
+    <ChartCard title="Drawdown" subtitle="Distance below the running peak of cumulative P/L" empty={!points.length} height="h-56">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }}>
-          <CartesianGrid stroke={C.grid} vertical={false} />
-          <XAxis dataKey="index" {...axisProps} tickFormatter={(v) => (v === 0 ? "" : `#${v}`)} minTickGap={24} />
-          <YAxis {...axisProps} width={64} tickFormatter={compactUsd} domain={["auto", 0]} />
-          <ReferenceLine y={0} stroke={C.axis} />
-          <Tooltip
-            cursor={{ stroke: C.axis, strokeDasharray: "3 3" }}
-            content={<Tip render={(p: EquityPoint) => (
+        <AreaChart data={data} margin={{ top: 8, right: 16, left: 4, bottom: 0 }}>
+          <CartesianGrid stroke={p.grid} vertical={false} />
+          <XAxis dataKey="index" type="number" domain={[0, "dataMax"]} {...axis(p)} allowDecimals={false}
+            tickFormatter={(i: number) => shortDate(data[Math.round(i)]?.date ?? "")} minTickGap={40} />
+          <YAxis {...axis(p)} width={62} tickFormatter={compactUsd} domain={["auto", 0]} />
+          <ReferenceLine y={0} stroke={p.axis} strokeOpacity={0.7} />
+          <Tooltip cursor={{ stroke: p.axis, strokeDasharray: "3 3" }}
+            content={<Tip render={(d: EquityPoint) => (
               <>
-                <div className="text-muted">{p.index === 0 ? "Start" : `Trade #${p.index} · ${p.date}`}</div>
-                <div className="num">Drawdown: {fmtMoney(p.drawdown)}</div>
+                <div className="text-muted">{d.index === 0 ? "Start" : `Trade #${d.index} · ${shortDate(d.date)}`}</div>
+                <div className="num mt-0.5 font-semibold">{fmtMoney(d.drawdown)}</div>
               </>
-            )} />}
-          />
-          <Area type="linear" dataKey="drawdown" stroke={C.loss} strokeWidth={2} fill={C.loss} fillOpacity={0.15} dot={false} isAnimationActive={false} />
+            )} />} />
+          <Area type="linear" dataKey="drawdown" stroke={p.loss} strokeWidth={1.75} fill={p.loss} fillOpacity={0.12} dot={false} isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -133,33 +161,37 @@ export function DrawdownChart({ points }: { points: EquityPoint[] }) {
 export type PeriodSets = Record<"day" | "week" | "month" | "year", PeriodBucket[]>;
 
 export function PeriodChart({ sets }: { sets: PeriodSets }) {
+  const p = usePalette();
   const [period, setPeriod] = useState<keyof PeriodSets>("day");
   const data = sets[period];
-  const titles = { day: "Daily performance", week: "Weekly performance", month: "Monthly performance", year: "Yearly performance" };
+  const titles = { day: "Daily P/L", week: "Weekly P/L", month: "Monthly P/L", year: "Yearly P/L" };
+  const best = data.length ? data.reduce((a, b) => (b.netPnl > a.netPnl ? b : a)) : null;
+  const worst = data.length ? data.reduce((a, b) => (b.netPnl < a.netPnl ? b : a)) : null;
   return (
     <ChartCard
       title={titles[period]}
+      subtitle={best && worst ? <>Best <span className="num text-fg">{fmtMoney(best.netPnl, "USD", true)}</span> ({periodLabel(best.key)}) · worst <span className="num text-fg">{fmtMoney(worst.netPnl, "USD", true)}</span> ({periodLabel(worst.key)})</> : undefined}
       empty={!data.length}
-      actions={<Tabs value={period} onChange={setPeriod} options={[["day", "Day"], ["week", "Week"], ["month", "Month"], ["year", "Year"]]} />}
+      actions={<Segmented label="Period" value={period} onChange={setPeriod} items={[["day", "Day"], ["week", "Week"], ["month", "Month"], ["year", "Year"]]} />}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barCategoryGap={2}>
-          <CartesianGrid stroke={C.grid} vertical={false} />
-          <XAxis dataKey="key" {...axisProps} minTickGap={16} />
-          <YAxis {...axisProps} width={64} tickFormatter={compactUsd} />
-          <ReferenceLine y={0} stroke={C.axis} />
+        <BarChart data={data} margin={{ top: 8, right: 16, left: 4, bottom: 0 }} barCategoryGap="18%">
+          <CartesianGrid stroke={p.grid} vertical={false} />
+          <XAxis dataKey="key" {...axis(p)} tickFormatter={periodLabel} minTickGap={16} />
+          <YAxis {...axis(p)} width={62} tickFormatter={compactUsd} />
+          <ReferenceLine y={0} stroke={p.axis} strokeOpacity={0.7} />
           <Tooltip
-            cursor={{ fill: "#ffffff08" }}
+            cursor={{ fill: p.grid, opacity: 0.6 }}
             content={<Tip render={(b: PeriodBucket) => (
               <>
-                <div className="text-muted">{b.key}</div>
-                <div className="num">Net: {fmtMoney(b.netPnl, "USD", true)}</div>
-                <div className="num text-muted">{b.trades} trades · {b.wins}W / {b.losses}L</div>
+                <div className="text-muted">{periodLabel(b.key)} {period === "week" ? `(${b.key})` : ""}</div>
+                <div className="num mt-0.5 font-semibold">{fmtMoney(b.netPnl, "USD", true)}</div>
+                <div className="num text-muted">{b.trades} trade{b.trades === 1 ? "" : "s"} · {b.wins}W / {b.losses}L</div>
               </>
             )} />}
           />
-          <Bar dataKey="netPnl" maxBarSize={28} radius={[3, 3, 3, 3]} isAnimationActive={false}>
-            {data.map((b) => <Cell key={b.key} fill={b.netPnl >= 0 ? C.profit : C.loss} />)}
+          <Bar dataKey="netPnl" maxBarSize={26} radius={[4, 4, 4, 4]} isAnimationActive={false}>
+            {data.map((b) => <Cell key={b.key} fill={b.netPnl >= 0 ? p.profit : p.loss} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -167,41 +199,45 @@ export function PeriodChart({ sets }: { sets: PeriodSets }) {
   );
 }
 
-export function WinLossChart({ wins, losses, breakeven, grossProfit, grossLoss }: { wins: number; losses: number; breakeven: number; grossProfit: number; grossLoss: number }) {
+export function WinLossChart({ wins, losses, breakeven, grossProfit, grossLoss, avgWin, avgLoss }: {
+  wins: number; losses: number; breakeven: number; grossProfit: number; grossLoss: number; avgWin: number | null; avgLoss: number | null;
+}) {
   const total = wins + losses + breakeven;
   const rows = [
-    { label: "Winners", count: wins, amount: grossProfit, color: C.profit },
-    { label: "Losers", count: losses, amount: grossLoss, color: C.loss },
-    { label: "Breakeven", count: breakeven, amount: 0, color: C.axis },
+    { label: "Winners", sym: "▲", count: wins, amount: grossProfit, avg: avgWin, cls: "bg-profit", text: "text-profit" },
+    { label: "Losers", sym: "▼", count: losses, amount: grossLoss, avg: avgLoss, cls: "bg-loss", text: "text-loss" },
+    { label: "Breakeven", sym: "●", count: breakeven, amount: 0, avg: null, cls: "bg-faint", text: "text-faint" },
   ];
   return (
-    <section className="card">
-      <header className="border-b border-line px-4 py-2.5">
-        <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">Winning vs. losing trades</h2>
+    <section className="card flex flex-col">
+      <header className="px-5 pt-4">
+        <h2 className="text-sm font-semibold">Winners vs. losers</h2>
+        <p className="mt-0.5 text-xs text-muted">Outcome distribution of closed trades</p>
       </header>
-      <div className="space-y-4 p-4">
+      <div className="flex flex-1 flex-col justify-center gap-5 p-5">
         {total === 0 ? (
-          <div className="flex h-48 items-center justify-center text-sm text-faint">No closed trades in this selection.</div>
+          <div className="flex h-40 items-center justify-center text-sm text-faint">No closed trades in this selection.</div>
         ) : (
           <>
-            <div className="flex h-3 gap-0.5 overflow-hidden rounded" role="img" aria-label={`${wins} wins, ${losses} losses, ${breakeven} breakeven`}>
-              {rows.filter((r) => r.count).map((r) => (
-                <div key={r.label} style={{ width: `${(r.count / total) * 100}%`, background: r.color }} title={`${r.label}: ${r.count}`} />
-              ))}
-            </div>
-            <table className="w-full text-sm">
-              <thead><tr className="text-[11px] uppercase tracking-wide text-muted"><th className="pb-1 text-left font-medium">Outcome</th><th className="pb-1 text-right font-medium">Trades</th><th className="pb-1 text-right font-medium">Share</th><th className="pb-1 text-right font-medium">Net P/L</th></tr></thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.label} className="border-t border-line/60">
-                    <td className="py-1.5"><span className="mr-2 inline-block h-2 w-2 rounded-sm" style={{ background: r.color }} />{r.label}</td>
-                    <td className="num py-1.5 text-right">{r.count}</td>
-                    <td className="num py-1.5 text-right text-muted">{((r.count / total) * 100).toFixed(1)}%</td>
-                    <td className="num py-1.5 text-right">{fmtMoney(r.amount, "USD", true)}</td>
-                  </tr>
+            <div>
+              <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`${wins} wins, ${losses} losses, ${breakeven} breakeven`}>
+                {rows.filter((r) => r.count).map((r) => (
+                  <div key={r.label} className={r.cls} style={{ width: `${(r.count / total) * 100}%` }} title={`${r.label}: ${r.count}`} />
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+            <dl className="divide-y divide-line">
+              {rows.map((r) => (
+                <div key={r.label} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <dt className="flex items-center gap-2"><span className={cx("text-[10px]", r.text)} aria-hidden>{r.sym}</span>{r.label}
+                    <span className="num text-xs text-faint">{r.count} · {((r.count / total) * 100).toFixed(0)}%</span></dt>
+                  <dd className="text-right">
+                    <div className="num font-medium">{fmtMoney(r.amount, "USD", true)}</div>
+                    {r.avg != null ? <div className="num text-xs text-faint">avg {fmtMoney(r.avg, "USD", true)}</div> : null}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </>
         )}
       </div>

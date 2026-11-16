@@ -28,7 +28,7 @@ function Row({ i }: { i?: Instrument }) {
           {i ? (
             <>
               <SubmitButton className="btn-sm" name="intent" value="save">Save</SubmitButton>
-              <SubmitButton className="btn-sm btn-danger" name="intent" value="delete" confirm={`Delete ${i.symbol}? Only possible if no trades use it.`}>✕</SubmitButton>
+              <SubmitButton className="btn-sm btn-danger" name="intent" value="delete" confirm={`Delete ${i.symbol}? Only possible if no trades use it.`} confirmLabel="Delete instrument">Delete</SubmitButton>
             </>
           ) : (
             <SubmitButton className="btn-sm btn-primary">Add</SubmitButton>

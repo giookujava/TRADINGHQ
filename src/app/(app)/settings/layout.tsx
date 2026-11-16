@@ -1,11 +1,12 @@
+import { PageHeader } from "@/components/ui";
 import { SettingsTabs } from "./tabs";
 
 export default function SettingsLayout({ children }: LayoutProps<"/settings">) {
   return (
-    <div className="mx-auto max-w-6xl">
-      <h1 className="text-lg font-semibold tracking-tight">Settings</h1>
+    <div className="mx-auto max-w-[1200px]">
+      <PageHeader eyebrow="System" title="Settings" subtitle="Preferences, accounts, contract specs, journal fields, data and integrations." />
       <SettingsTabs />
-      <div className="mt-5">{children}</div>
+      <div className="mt-6">{children}</div>
     </div>
   );
 }

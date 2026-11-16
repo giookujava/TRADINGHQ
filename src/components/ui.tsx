@@ -1,81 +1,151 @@
 import type { ReactNode } from "react";
+import { Info, TriangleAlert, CircleCheck, OctagonAlert } from "lucide-react";
 
 export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
 }
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+export function PageHeader({ title, subtitle, actions, eyebrow }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-        {subtitle ? <div className="mt-0.5 text-sm text-muted">{subtitle}</div> : null}
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        {eyebrow ? <div className="eyebrow mb-1">{eyebrow}</div> : null}
+        <h1 className="text-[22px] font-semibold leading-tight tracking-tight">{title}</h1>
+        {subtitle ? <div className="mt-1 text-sm text-muted">{subtitle}</div> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }
 
-export function Card({ title, actions, children, className }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({ title, subtitle, actions, children, className, bodyClassName, flush }: {
+  title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; bodyClassName?: string; flush?: boolean;
+}) {
   return (
     <section className={cx("card", className)}>
       {title ? (
-        <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-          <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">{title}</h2>
-          {actions}
+        <header className="flex flex-wrap items-start justify-between gap-2 px-5 pt-4 pb-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold">{title}</h2>
+            {subtitle ? <p className="mt-0.5 text-xs text-muted">{subtitle}</p> : null}
+          </div>
+          {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
         </header>
       ) : null}
-      <div className="p-4">{children}</div>
+      <div className={cx(flush ? "" : title ? "px-5 pb-5" : "p-5", bodyClassName)}>{children}</div>
     </section>
   );
 }
 
+/** Compact KPI: label, large value, optional hint. No border — meant to sit inside a card. */
+export function Metric({ label, value, hint, tone, size = "md" }: {
+  label: ReactNode; value: ReactNode; hint?: ReactNode; tone?: "profit" | "loss" | null; size?: "sm" | "md" | "lg" | "xl";
+}) {
+  const sizes = { sm: "text-base", md: "text-xl", lg: "text-2xl", xl: "text-[34px] leading-none" } as const;
+  return (
+    <div className="min-w-0">
+      <div className="text-xs font-medium text-muted">{label}</div>
+      <div className={cx("num mt-1.5 font-semibold tracking-tight", sizes[size], tone === "profit" && "text-profit", tone === "loss" && "text-loss")}>{value}</div>
+      {hint ? <div className="mt-1 truncate text-xs text-faint">{hint}</div> : null}
+    </div>
+  );
+}
+
+/** Bordered KPI tile (used for trade detail headline numbers). */
 export function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "profit" | "loss" | null }) {
   return (
-    <div className="card px-3.5 py-3">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</div>
-      <div className={cx("num mt-1 text-lg font-semibold", tone === "profit" && "text-profit", tone === "loss" && "text-loss")}>{value}</div>
-      {hint ? <div className="mt-0.5 text-[11px] text-faint">{hint}</div> : null}
+    <div className="card px-4 py-3.5">
+      <Metric label={label} value={value} hint={hint} tone={tone} />
     </div>
   );
 }
 
-export function Badge({ children, tone = "default" }: { children: ReactNode; tone?: "default" | "accent" | "profit" | "loss" | "warn" }) {
-  const tones = {
-    default: "border-line-strong text-muted",
-    accent: "border-accent/40 text-accent",
-    profit: "border-profit/40 text-profit",
-    loss: "border-loss/40 text-loss",
-    warn: "border-warn/40 text-warn",
-  } as const;
-  return <span className={cx("inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide", tones[tone])}>{children}</span>;
-}
-
-export function Empty({ title, children }: { title: string; children?: ReactNode }) {
+/** Row in a definition list of secondary statistics. */
+export function StatRow({ label, value, hint, tone }: { label: ReactNode; value: ReactNode; hint?: ReactNode; tone?: "profit" | "loss" | null }) {
   return (
-    <div className="rounded-lg border border-dashed border-line-strong px-6 py-10 text-center">
-      <div className="font-medium">{title}</div>
-      {children ? <div className="mt-1 text-sm text-muted">{children}</div> : null}
+    <div className="flex items-baseline justify-between gap-4 py-2">
+      <dt className="min-w-0 text-sm text-muted">
+        {label}
+        {hint ? <span className="ml-1.5 text-xs text-faint">{hint}</span> : null}
+      </dt>
+      <dd className={cx("num shrink-0 text-sm font-medium", tone === "profit" && "text-profit", tone === "loss" && "text-loss")}>{value}</dd>
     </div>
   );
 }
 
-export function Notice({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "warn" | "error" | "success" }) {
-  const tones = {
-    info: "border-accent/30 bg-accent/5 text-fg",
-    warn: "border-warn/40 bg-warn/10 text-warn",
-    error: "border-loss/40 bg-loss/10 text-loss",
-    success: "border-profit/40 bg-profit/10 text-profit",
-  } as const;
-  return <div className={cx("rounded-md border px-3 py-2 text-sm", tones[tone])}>{children}</div>;
+type Tone = "default" | "accent" | "profit" | "loss" | "warn";
+const BADGE: Record<Tone, string> = {
+  default: "bg-surface-3 text-muted",
+  accent: "bg-accent-soft text-accent",
+  profit: "bg-profit-soft text-profit",
+  loss: "bg-loss-soft text-loss",
+  warn: "bg-warn-soft text-warn",
+};
+
+export function Badge({ children, tone = "default", className }: { children: ReactNode; tone?: Tone; className?: string }) {
+  return (
+    <span className={cx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold leading-4", BADGE[tone], className)}>
+      {children}
+    </span>
+  );
 }
 
-export function Field({ label, children, hint, className }: { label: string; children: ReactNode; hint?: ReactNode; className?: string }) {
+/** Long / Short pill: arrow + word, so direction never relies on colour alone. */
+export function DirectionBadge({ direction }: { direction: "long" | "short" }) {
+  return direction === "long" ? <Badge tone="profit">▲ Long</Badge> : <Badge tone="loss">▼ Short</Badge>;
+}
+
+export function Empty({ title, children, icon, action }: { title: string; children?: ReactNode; icon?: ReactNode; action?: ReactNode }) {
   return (
-    <label className={cx("block", className)}>
+    <div className="flex flex-col items-center rounded-xl border border-dashed border-line-strong bg-surface/50 px-6 py-12 text-center">
+      {icon ? <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">{icon}</div> : null}
+      <div className="font-semibold">{title}</div>
+      {children ? <div className="mt-1 max-w-md text-sm text-muted">{children}</div> : null}
+      {action ? <div className="mt-4">{action}</div> : null}
+    </div>
+  );
+}
+
+export function Notice({ children, tone = "info", className }: { children: ReactNode; tone?: "info" | "warn" | "error" | "success"; className?: string }) {
+  const map = {
+    info: ["bg-accent-soft text-fg", Info, "text-accent"],
+    warn: ["bg-warn-soft text-fg", TriangleAlert, "text-warn"],
+    error: ["bg-loss-soft text-fg", OctagonAlert, "text-loss"],
+    success: ["bg-profit-soft text-fg", CircleCheck, "text-profit"],
+  } as const;
+  const [cls, Icon, iconCls] = map[tone];
+  return (
+    <div role={tone === "error" ? "alert" : undefined} className={cx("flex items-start gap-2.5 rounded-lg px-3.5 py-2.5 text-sm", cls, className)}>
+      <Icon className={cx("mt-0.5 h-4 w-4 shrink-0", iconCls)} aria-hidden />
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+export function Field({ label, children, hint, className }: { label: ReactNode; children: ReactNode; hint?: ReactNode; className?: string }) {
+  return (
+    <label className={cx("block min-w-0", className)}>
       <span className="label">{label}</span>
       {children}
-      {hint ? <span className="mt-1 block text-[11px] text-faint">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[11px] leading-snug text-faint">{hint}</span> : null}
     </label>
   );
+}
+
+/** Small card section heading used inside long forms. */
+export function SectionTitle({ children, description, icon }: { children: ReactNode; description?: ReactNode; icon?: ReactNode }) {
+  return (
+    <div className="mb-4 flex items-start gap-2.5">
+      {icon ? <div className="mt-0.5 text-faint">{icon}</div> : null}
+      <div>
+        <h3 className="text-sm font-semibold">{children}</h3>
+        {description ? <p className="mt-0.5 text-xs text-muted">{description}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+/** Coloured signed P/L text with explicit + / − sign. */
+export function Pnl({ value, children, className }: { value: number | null | undefined; children: ReactNode; className?: string }) {
+  return <span className={cx("num", value != null && value > 0 && "text-profit", value != null && value < 0 && "text-loss", className)}>{children}</span>;
 }

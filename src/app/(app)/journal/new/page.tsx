@@ -14,7 +14,7 @@ export default async function NewTradePage() {
   now.setSeconds(0, 0);
   return (
     <div className="mx-auto max-w-7xl">
-      <PageHeader title="New trade" subtitle="Record fills exactly as executed. Add entries/exits for scaling and partials." />
+      <PageHeader eyebrow="Trade journal" title="New trade" subtitle="Record fills exactly as executed. Add entries/exits for scaling and partials." />
       <TradeForm
         {...ref}
         tradingTz={tz}

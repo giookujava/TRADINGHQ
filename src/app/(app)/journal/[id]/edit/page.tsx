@@ -28,7 +28,7 @@ export default async function EditTradePage({ params }: PageProps<"/journal/[id]
   }));
   return (
     <div className="mx-auto max-w-7xl">
-      <PageHeader title="Edit trade" subtitle={`${detail.trade.trade_date}`} />
+      <PageHeader eyebrow="Trade journal" title="Edit trade" subtitle={`${detail.trade.trade_date}`} />
       <TradeForm
         {...ref}
         trade={detail.trade}

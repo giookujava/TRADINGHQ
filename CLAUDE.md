@@ -40,9 +40,25 @@ Supabase (Postgres + Auth + Storage) via `@supabase/ssr` · zod 4 · Recharts 3 
   `ActionResult` (`{ ok, error, message }`), call `requireUser()` first, and `revalidatePath`.
 - DB row types: `src/lib/db/types.ts` — keep in sync with migrations by hand.
 - New schema changes = a new file `supabase/migrations/000N_*.sql`; add it to `tests/db/schema.test.ts`.
-- Colours are tokens in `src/app/globals.css` (`bg-panel`, `text-muted`, `text-profit`, …). Numbers use `.num`.
-- Nullable booleans mean “not recorded” — never coerce to false in analytics.
-- Polarity in charts is encoded by position (above/below zero) + signed labels, not colour alone.
+- Nullable booleans mean “not recorded” — never coerce to false in analytics. Forms post them as
+  radio groups with values "", "yes", "no" (parsed by `triBool`).
+- Polarity is never colour-only: charts use position (above/below zero), tables/badges use +/− signs, ▲/▼ and ✓/✕.
+
+## Design system (UI redesign, branch `redesign/ui`)
+- **Themes**: tokens on `:root` (light) and `[data-theme="dark"]` in `src/app/globals.css`, mapped to Tailwind via
+  `@theme inline` → use `bg-bg`, `bg-surface`, `bg-surface-2/3`, `border-line(-strong)`, `text-fg/muted/faint`,
+  `text-accent`, `bg-accent-soft`, `text-profit/loss/warn`, `bg-*-soft`, `shadow-card/pop`. Never hard-code hex in components.
+- **No-flash**: `themeInitScript` (`src/lib/theme.ts`) runs inline in `<head>`; preference (`light|dark|system`) and
+  sidebar state live in localStorage (`thq-theme`, `thq-sidebar`). `applyTheme()` dispatches `thq-theme-change`.
+- **Charts** (`src/components/charts.tsx`) read colours from CSS variables via `usePalette()` and re-render on theme change.
+- **Components**: `src/components/ui.tsx` (PageHeader, Card, Metric, StatRow, Badge, DirectionBadge, Empty, Notice,
+  Field, Pnl), `toast.tsx` (ToastProvider/useToast, Tabs, Segmented), `action-form.tsx` (ActionForm with toast;
+  SubmitButton with accessible `<dialog>` confirmation via `confirm`/`confirmLabel`), `filter-bar.tsx`
+  (account + date presets + expandable filters, URL-driven), `trade-table.tsx` (client sort/search over server rows),
+  `app-shell.tsx` (sidebar, top bar, user menu), `theme-switcher.tsx`. Route-level `loading.tsx`/`error.tsx` in `(app)`.
+- Component CSS classes (`.field`, `.btn*`, `.card`, `.table`, `.label`, `.eyebrow`, `.skeleton`) live in `@layer components`.
+- Icons: `lucide-react` (pinned 1.59.0). Fonts: Geist + Geist Mono (`.num` for all numbers).
+- Unbuilt sections stay disabled in the sidebar with a phase badge — do not add fake pages.
 
 ## Project structure
 ```

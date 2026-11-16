@@ -11,14 +11,14 @@ export function LoginForm({ initialError }: { initialError?: string }) {
   const pending = inPending || upPending;
 
   return (
-    <form action={mode === "signin" ? inAction : upAction} className="card space-y-4 p-5">
-      <div className="flex rounded-md border border-line p-0.5 text-sm">
+    <form action={mode === "signin" ? inAction : upAction} className="card space-y-4 p-6 shadow-pop">
+      <div className="flex rounded-lg border border-line bg-surface-2 p-0.5 text-sm">
         {(["signin", "signup"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
-            className={`flex-1 rounded px-3 py-1.5 ${mode === m ? "bg-panel-2 text-fg" : "text-muted hover:text-fg"}`}
+            className={`flex-1 rounded-md px-3 py-1.5 font-medium transition-colors ${mode === m ? "bg-surface text-fg shadow-card" : "text-muted hover:text-fg"}`}
           >
             {m === "signin" ? "Sign in" : "Create account"}
           </button>

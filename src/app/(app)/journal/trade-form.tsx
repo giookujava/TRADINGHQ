@@ -1,4 +1,5 @@
 "use client";
+import { Brain, ChartCandlestick, ChevronDown, ListChecks, NotebookPen, Plus, Shield, Tag as TagIcon, Trash2, Info } from "lucide-react";
 import Link from "next/link";
 import { startTransition, useActionState, useMemo, useState, type FormEvent } from "react";
 import { Field, Notice, cx } from "@/components/ui";
@@ -42,27 +43,43 @@ let keySeq = 0;
 const newKey = () => `e${++keySeq}${Math.random().toString(36).slice(2, 6)}`;
 const triValue = (v: boolean | null | undefined) => (v === true ? "yes" : v === false ? "no" : "");
 
+/** Three-state toggle: not recorded / yes / no (radio group, posts "", "yes" or "no"). */
 function TriSelect({ name, label, value }: { name: string; label: string; value: boolean | null | undefined }) {
+  const initial = triValue(value);
   return (
-    <label className="flex items-center justify-between gap-2 py-1">
-      <span className="text-sm">{label}</span>
-      <select name={name} defaultValue={triValue(value)} className="field w-28 flex-none py-1">
-        <option value="">—</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
-    </label>
+    <fieldset className="flex items-center justify-between gap-3 py-1.5">
+      <legend className="sr-only">{label}</legend>
+      <span className="text-sm" aria-hidden>{label}</span>
+      <div className="inline-flex shrink-0 rounded-lg border border-line bg-surface-2 p-0.5">
+        {([["", "—"], ["yes", "Yes"], ["no", "No"]] as const).map(([v, l]) => (
+          <label key={v} className="cursor-pointer">
+            <input type="radio" name={name} value={v} defaultChecked={initial === v} className="peer sr-only" />
+            <span className="block rounded-md px-2.5 py-1 text-xs font-medium text-muted transition-colors peer-checked:bg-surface peer-checked:text-fg peer-checked:shadow-card peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--ring)]">
+              {l}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
-function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Section({ title, description, icon, children, defaultOpen = true }: {
+  title: string; description?: string; icon?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean;
+}) {
   return (
     <details open={defaultOpen} className="card group">
-      <summary className="flex cursor-pointer list-none items-center justify-between border-b border-line px-4 py-2.5 text-[12px] font-semibold uppercase tracking-wider text-muted group-not-open:border-b-0">
-        {title}
-        <span className="text-faint group-open:rotate-90">›</span>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden">
+        <span className="flex items-start gap-2.5">
+          {icon ? <span className="mt-0.5 text-faint">{icon}</span> : null}
+          <span>
+            <span className="block text-sm font-semibold">{title}</span>
+            {description ? <span className="mt-0.5 block text-xs font-normal text-muted">{description}</span> : null}
+          </span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-faint transition-transform group-open:rotate-180" aria-hidden />
       </summary>
-      <div className="p-4">{children}</div>
+      <div className="border-t border-line px-5 py-5">{children}</div>
     </details>
   );
 }
@@ -214,10 +231,17 @@ export function TradeForm(p: Props) {
         <Notice tone="warn">This trade was imported from {t.source}. Editing executions here will diverge from the source record.</Notice>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-4">
-          <section className="card p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-4">
+          <section className="card p-5">
+            <div className="mb-4 flex items-start gap-2.5">
+              <Info className="mt-0.5 h-4 w-4 text-faint" aria-hidden />
+              <div>
+                <h2 className="text-sm font-semibold">Trade setup</h2>
+                <p className="mt-0.5 text-xs text-muted">Account, instrument and context. Date and session fill in from the first entry until you change them.</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Field label="Account">
                 <select name="account_id" className="field" value={accountId} onChange={(e) => {
                   setAccountId(e.target.value);
@@ -238,11 +262,11 @@ export function TradeForm(p: Props) {
                 </select>
               </Field>
               <Field label="Direction">
-                <div className="grid grid-cols-2 gap-1 rounded-md border border-line p-0.5">
+                <div className="grid h-[34px] grid-cols-2 gap-1 rounded-md border border-line-strong bg-surface-2 p-0.5" role="radiogroup" aria-label="Direction">
                   {(["long", "short"] as const).map((d) => (
-                    <button key={d} type="button" onClick={() => setDirection(d)}
-                      className={cx("rounded px-2 py-1 text-sm font-medium", direction === d ? (d === "long" ? "bg-profit/20 text-profit" : "bg-loss/20 text-loss") : "text-muted hover:text-fg")}>
-                      {d === "long" ? "Long" : "Short"}
+                    <button key={d} type="button" role="radio" aria-checked={direction === d} onClick={() => setDirection(d)}
+                      className={cx("rounded text-sm font-semibold transition-colors", direction === d ? (d === "long" ? "bg-profit-soft text-profit shadow-card" : "bg-loss-soft text-loss shadow-card") : "text-muted hover:text-fg")}>
+                      {d === "long" ? "▲ Long" : "▼ Short"}
                     </button>
                   ))}
                 </div>
@@ -269,13 +293,17 @@ export function TradeForm(p: Props) {
           </section>
 
           <section className="card">
-            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-              <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
-                Executions <span className="normal-case tracking-normal text-faint">· times in {p.tradingTz}</span>
-              </h2>
+            <header className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
+              <div className="flex items-start gap-2.5">
+                <ListChecks className="mt-0.5 h-4 w-4 text-faint" aria-hidden />
+                <div>
+                  <h2 className="text-sm font-semibold">Executions</h2>
+                  <p className="mt-0.5 text-xs text-muted">Every fill as executed · times in {p.tradingTz} · fees auto-fill from instrument rates</p>
+                </div>
+              </div>
               <div className="flex gap-2">
-                <button type="button" className="btn btn-sm" onClick={() => addRow("entry")}>+ Entry (scale in)</button>
-                <button type="button" className="btn btn-sm" onClick={() => addRow("exit")}>+ Exit (partial)</button>
+                <button type="button" className="btn btn-sm" onClick={() => addRow("entry")}><Plus className="h-3.5 w-3.5" /> Entry <span className="text-faint">(scale in)</span></button>
+                <button type="button" className="btn btn-sm" onClick={() => addRow("exit")}><Plus className="h-3.5 w-3.5" /> Exit <span className="text-faint">(partial)</span></button>
               </div>
             </header>
             <div className="overflow-x-auto">
@@ -287,7 +315,7 @@ export function TradeForm(p: Props) {
                   {execs.map((e) => (
                     <tr key={e.key}>
                       <td>
-                        <select className="field w-20 py-1" value={e.kind} onChange={(ev) => update(e.key, { kind: ev.target.value as ExecDraft["kind"] })} aria-label="Entry or exit">
+                        <select className="field w-[92px] py-1" value={e.kind} onChange={(ev) => update(e.key, { kind: ev.target.value as ExecDraft["kind"] })} aria-label="Entry or exit">
                           <option value="entry">Entry</option>
                           <option value="exit">Exit</option>
                         </select>
@@ -300,7 +328,7 @@ export function TradeForm(p: Props) {
                         <input className={cx("field num w-24 py-1", e.feeAuto && "text-muted")} inputMode="decimal" value={e.fees} onChange={(ev) => update(e.key, { fees: ev.target.value })} aria-label="Fees" title={e.feeAuto ? "Auto: contracts × instrument per-side commission + fees" : "Manually set"} />
                       </td>
                       <td>
-                        <button type="button" className="btn btn-ghost btn-sm text-faint" disabled={execs.length === 1} onClick={() => setExecs((prev) => prev.filter((x) => x.key !== e.key))} aria-label="Remove execution">✕</button>
+                        <button type="button" className="btn btn-ghost btn-sm text-faint hover:text-loss" disabled={execs.length === 1} onClick={() => setExecs((prev) => prev.filter((x) => x.key !== e.key))} aria-label="Remove execution"><Trash2 className="h-3.5 w-3.5" /></button>
                       </td>
                     </tr>
                   ))}
@@ -309,7 +337,7 @@ export function TradeForm(p: Props) {
             </div>
           </section>
 
-          <Section title="Risk plan">
+          <Section title="Risk plan" icon={<Shield className="h-4 w-4" />} description="Stop, target and planned risk — used for the R multiple.">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Field label="Stop-loss"><input name="stop_loss" className="field num" inputMode="decimal" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} /></Field>
               <Field label="Take-profit"><input name="take_profit" className="field num" inputMode="decimal" defaultValue={t?.take_profit ?? ""} /></Field>
@@ -322,7 +350,7 @@ export function TradeForm(p: Props) {
             </div>
           </Section>
 
-          <Section title="Market analysis (ICT & context)">
+          <Section title="Market analysis" icon={<ChartCandlestick className="h-4 w-4" />} description="Bias, key levels, liquidity and the ICT concepts you observed — all optional.">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Field label="Daily bias">
                 <select name="daily_bias" className="field" defaultValue={t?.daily_bias ?? ""}>
@@ -347,7 +375,7 @@ export function TradeForm(p: Props) {
               <Field label="Sell-side liquidity" className="sm:col-span-2"><input name="sell_side_liquidity" className="field" defaultValue={t?.sell_side_liquidity ?? ""} /></Field>
               <Field label="Entry confirmation" className="sm:col-span-2 lg:col-span-4"><input name="entry_confirmation" className="field" defaultValue={t?.entry_confirmation ?? ""} placeholder="What confirmed the entry?" /></Field>
             </div>
-            <div className="mt-3 grid gap-x-8 sm:grid-cols-2">
+            <div className="mt-5 grid gap-x-10 divide-line sm:grid-cols-2">
               {ICT_FLAGS.map(([k, label]) => <TriSelect key={k} name={k} label={label} value={t?.[k]} />)}
             </div>
             <Field label="Analysis notes" className="mt-3">
@@ -355,7 +383,7 @@ export function TradeForm(p: Props) {
             </Field>
           </Section>
 
-          <Section title="Psychology & execution">
+          <Section title="Psychology & execution" icon={<Brain className="h-4 w-4" />} description="How you felt and how well you executed.">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Field label="Emotion before"><input name="emotion_before" className="field" defaultValue={t?.emotion_before ?? ""} placeholder="calm, anxious, FOMO…" /></Field>
               <Field label="Emotion during"><input name="emotion_during" className="field" defaultValue={t?.emotion_during ?? ""} /></Field>
@@ -366,7 +394,7 @@ export function TradeForm(p: Props) {
                 </select>
               </Field>
             </div>
-            <div className="mt-3 grid gap-x-8 sm:grid-cols-2">
+            <div className="mt-5 grid gap-x-10 divide-line sm:grid-cols-2">
               {PSYCH_FLAGS.map(([k, label]) => <TriSelect key={k} name={k} label={label} value={t?.[k]} />)}
             </div>
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
@@ -376,7 +404,7 @@ export function TradeForm(p: Props) {
           </Section>
 
           {p.tags.length || p.customFields.some((c) => c.is_active) ? (
-            <Section title="Tags & custom fields">
+            <Section title="Tags & custom fields" icon={<TagIcon className="h-4 w-4" />}>
               {TAG_CATEGORIES.map((cat) => {
                 const list = p.tags.filter((x) => x.category === cat);
                 if (!list.length) return null;
@@ -387,7 +415,7 @@ export function TradeForm(p: Props) {
                       {list.map((tag) => (
                         <label key={tag.id} className="cursor-pointer">
                           <input type="checkbox" name="tag_ids" value={tag.id} defaultChecked={selectedTags.has(tag.id)} className="peer sr-only" />
-                          <span className="inline-flex items-center gap-1.5 rounded border border-line px-2 py-1 text-xs text-muted peer-checked:border-accent peer-checked:text-fg peer-focus-visible:ring-1 peer-focus-visible:ring-accent">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-line-strong px-2.5 py-1 text-xs text-muted transition-colors peer-checked:border-accent peer-checked:bg-accent-soft peer-checked:text-fg peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--ring)]">
                             <span className="h-2 w-2 rounded-full" style={{ background: tag.color }} />{tag.name}
                           </span>
                         </label>
@@ -420,29 +448,42 @@ export function TradeForm(p: Props) {
             </Section>
           ) : null}
 
-          <Section title="Notes">
+          <Section title="Notes" icon={<NotebookPen className="h-4 w-4" />}>
             <textarea name="notes" className="field min-h-[120px]" defaultValue={t?.notes ?? ""} placeholder="Anything else about this trade…" />
           </Section>
+
+          {/* Sticky action bar for screens where the summary panel is not beside the form */}
+          <div className="sticky bottom-0 z-10 -mx-4 border-t border-line bg-bg/90 px-4 py-3 backdrop-blur md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 2xl:hidden">
+            {state.error ? <Notice tone="error" className="mb-2">{state.error}</Notice> : null}
+            <div className="flex items-center justify-end gap-2">
+              {preview.calc ? (
+                <span className="mr-auto text-sm text-muted">Net <span className={cx("num font-semibold", preview.calc.netPnl > 0 && "text-profit", preview.calc.netPnl < 0 && "text-loss")}>{fmtMoney(preview.calc.netPnl, "USD", true)}</span> · {fmtR(preview.calc.rMultiple)}</span>
+              ) : <span className="mr-auto text-sm text-warn">{"error" in preview ? preview.error : ""}</span>}
+              <Link href={t ? `/journal/${t.id}` : "/journal"} className="btn">Cancel</Link>
+              <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? "Saving…" : t ? "Save changes" : "Save trade"}</button>
+            </div>
+          </div>
         </div>
 
-        <aside className="space-y-3 xl:sticky xl:top-5 xl:self-start">
-          <section className="card p-4">
-            <h2 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-muted">Calculated</h2>
+        <aside className="order-first space-y-3 2xl:sticky 2xl:top-20 2xl:order-none 2xl:self-start">
+          <section className="card p-5">
+            <h2 className="text-sm font-semibold">Live calculation</h2>
+            <p className="mb-4 mt-0.5 text-xs text-muted">Preview only — the server recalculates on save.</p>
             {"error" in preview ? (
               <p className="text-sm text-warn">{preview.error}</p>
             ) : (
-              <dl className="num space-y-1.5 text-sm">
+              <dl className="num grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-3 lg:grid-cols-4 2xl:block 2xl:space-y-1.5">
                 {[
                   ["Status", preview.calc.status === "open" ? `Open (${preview.calc.openQuantity} left)` : "Closed"],
                   ["Avg entry", fmtPrice(preview.calc.avgEntryPrice)],
                   ["Avg exit", fmtPrice(preview.calc.avgExitPrice)],
                   ["Max contracts", String(preview.calc.maxPosition)],
                   ["Points / contract", fmtNum(preview.calc.points, 4)],
-                ].map(([k, v]) => <div key={k} className="flex justify-between"><dt className="text-muted">{k}</dt><dd>{v}</dd></div>)}
-                <div className="my-2 border-t border-line" />
+                ].map(([k, v]) => <div key={k} className="flex justify-between gap-3"><dt className="text-muted">{k}</dt><dd>{v}</dd></div>)}
+                <div className="col-span-full my-2 border-t border-line" />
                 <div className="flex justify-between"><dt className="text-muted">Gross P/L</dt><dd className={preview.calc.grossPnl >= 0 ? "text-profit" : "text-loss"}>{fmtMoney(preview.calc.grossPnl)}</dd></div>
                 <div className="flex justify-between"><dt className="text-muted">Fees</dt><dd>{preview.calc.totalFees ? `−${fmtMoney(preview.calc.totalFees)}` : fmtMoney(0)}</dd></div>
-                <div className="flex justify-between text-base font-semibold"><dt>Net P/L</dt><dd className={preview.calc.netPnl > 0 ? "text-profit" : preview.calc.netPnl < 0 ? "text-loss" : ""}>{fmtMoney(preview.calc.netPnl)}</dd></div>
+                <div className="col-span-full my-1 flex items-baseline justify-between rounded-lg bg-surface-2 px-3 py-2.5 text-lg font-semibold 2xl:-mx-5 2xl:rounded-none 2xl:px-5"><dt className="font-sans text-sm">Net P/L</dt><dd className={preview.calc.netPnl > 0 ? "text-profit" : preview.calc.netPnl < 0 ? "text-loss" : ""}>{fmtMoney(preview.calc.netPnl, "USD", true)}</dd></div>
                 <div className="flex justify-between"><dt className="text-muted">Planned risk</dt><dd>{fmtMoney(preview.calc.plannedRisk)}</dd></div>
                 <div className="flex justify-between"><dt className="text-muted">R multiple</dt><dd>{fmtR(preview.calc.rMultiple)}</dd></div>
                 <div className="flex justify-between"><dt className="text-muted">Duration</dt><dd>{formatDuration(preview.calc.holdingSeconds)}</dd></div>
@@ -451,14 +492,16 @@ export function TradeForm(p: Props) {
             {instrument ? (
               <p className="mt-3 text-[11px] text-faint">
                 {instrument.symbol}: ${fmtNum(Number(instrument.point_value))}/point, tick {fmtNum(Number(instrument.tick_size), 6)} = ${fmtNum(Number(instrument.tick_value), 4)}.
-                The server recalculates on save.
+
               </p>
             ) : null}
           </section>
-          {state.error ? <Notice tone="error">{state.error}</Notice> : null}
-          <div className="flex gap-2">
-            <button type="submit" className="btn btn-primary flex-1" disabled={pending}>{pending ? "Saving…" : t ? "Save changes" : "Save trade"}</button>
-            <Link href={t ? `/journal/${t.id}` : "/journal"} className="btn">Cancel</Link>
+          <div className="hidden space-y-3 2xl:block">
+            {state.error ? <Notice tone="error">{state.error}</Notice> : null}
+            <div className="flex gap-2">
+              <button type="submit" className="btn btn-primary flex-1" disabled={pending}>{pending ? "Saving…" : t ? "Save changes" : "Save trade"}</button>
+              <Link href={t ? `/journal/${t.id}` : "/journal"} className="btn">Cancel</Link>
+            </div>
           </div>
         </aside>
       </div>
