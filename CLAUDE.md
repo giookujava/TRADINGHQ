@@ -99,6 +99,23 @@ all three exports, sample data generate/remove. Not exercised in-browser: sign-o
 - Dashboard: all spec §4 stats, equity/cumulative, drawdown, day/week/month/year, win vs loss; filters
 - Exports: trades CSV (filtered), executions CSV, full JSON backup
 
+### Phase 2 + 3 — implemented, browser-checked on sample data (2026-11-17)
+Needs migration `0003_phase2_3.sql` (cash flows, knowledge base, AI conversations/messages, profile AI settings).
+Migration 0003 applied to the live project. Checked live: analytics (n, comparisons, breakdowns, mistakes), cash flow add/delete
+(balance changes, P/L does not), knowledge create/delete, assistant answers with tools + trade links + memory (~$0.01/question).
+Not yet checked: screenshot analysis, budget-cap refusal, knowledge linking with real (non-sample) trades.
+- **Analytics** (`/analytics`): `src/lib/calc/analytics.ts` (groupBy, compare, lastVsPrevious, mistakes, drawdownStats);
+  breakdown explorer over `src/lib/data/dimensions.ts`; groups with n<10 flagged `lowSample`.
+- **Finance** (`/finance`): `account_transactions` cash flows; `src/lib/calc/finance.ts` — cash flows change balance,
+  never trading P/L; prop rules (target, daily loss, static/trailing/eod_trailing drawdown) on realised P/L.
+  Dashboard balance includes cash flows.
+- **Knowledge** (`/knowledge`): entries auto-relate to trades by ICT concept flag / strategy / tag, plus manual links.
+- **AI assistant** (`/assistant`, `POST /api/assistant`): OpenAI Responses API via plain fetch
+  (`src/lib/ai/openai.ts`), `store:false`, key `OPENAI_API_KEY` server-only. The model only gets read-only tools
+  (`src/lib/ai/tools.ts`) that run with the user's RLS session and reuse the calc engine; screenshots are passed as
+  10-minute signed URLs. Cost estimated from `src/lib/ai/models.ts` prices, stored per message, monthly cap
+  (`profiles.ai_monthly_budget_usd`, default $5) enforced before each request. Settings → Profile has the AI card.
+
 ### Known limitations / next
 - `.env.local` URL must be the bare project URL (no `/rest/v1/`). New Supabase projects need 0002 (grants).
 - Deleted screenshots may stay reachable via an already-issued signed URL until Supabase's CDN cache expires (≤1h).
@@ -107,5 +124,5 @@ all three exports, sample data generate/remove. Not exercised in-browser: sign-o
 - No restore-from-backup yet; screenshots are not embedded in the JSON backup.
 - Session windows are fixed defaults (`SESSION_WINDOWS_NY`); trade session/date are editable per trade.
 - Changing an instrument's specs does not recompute existing trades until they are re-saved.
-- Phase 2: analytics page, comparisons, psychology/mistake analysis, financial management (cash flows),
-  knowledge base (tables designed in docs/ARCHITECTURE.md §3).
+- JSON backup does not yet include cash flows, knowledge entries or AI conversations.
+- OpenAI usage fields are parsed defensively; compare the estimated cost with the OpenAI dashboard.

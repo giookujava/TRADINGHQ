@@ -5,7 +5,6 @@ import {
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fmt } from "@/lib/i18n";
 import { useT } from "@/lib/i18n/client";
 import { setSidebarCollapsed } from "@/lib/theme";
 import { BrandLogo, BrandMark } from "./brand";
@@ -51,12 +50,12 @@ export function Sidebar({ tradingTz, displayTz, mobileOpen, onClose, accounts, t
     { href: "/prep", label: t.nav.prep, icon: CalendarCheck },
   ];
   const planned = [
-    { label: t.nav.analytics, icon: ChartColumn, phase: 2 },
-    { label: t.nav.knowledge, icon: Library, phase: 2 },
-    { label: t.nav.finance, icon: Wallet, phase: 2 },
-    { label: t.nav.assistant, icon: Bot, phase: 3 },
+    { href: "/analytics", label: t.nav.analytics, icon: ChartColumn },
+    { href: "/knowledge", label: t.nav.knowledge, icon: Library },
+    { href: "/finance", label: t.nav.finance, icon: Wallet },
+    { href: "/assistant", label: t.nav.assistant, icon: Bot },
   ];
-  const itemBase = "group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-[15px] font-semibold transition-colors collapsed:md:justify-center collapsed:md:px-0";
+  const itemBase = "group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[15px] font-semibold transition-colors collapsed:md:justify-center collapsed:md:px-0";
 
   return (
     <>
@@ -70,7 +69,7 @@ export function Sidebar({ tradingTz, displayTz, mobileOpen, onClose, accounts, t
         aria-label="Main navigation"
       >
         {/* Brand + collapse */}
-        <div className="flex items-center justify-between gap-2 px-6 pt-7 pb-2 collapsed:md:flex-col collapsed:md:px-0 collapsed:md:pt-6">
+        <div className="flex items-center justify-between gap-2 px-6 pt-6 pb-2 collapsed:md:flex-col collapsed:md:px-0 collapsed:md:pt-6">
           <Link href="/" onClick={onClose} aria-label={t.nav.home} title={t.nav.dashboard} className="flex items-center rounded-lg">
             <BrandLogo className="h-9 collapsed:md:hidden" />
             <BrandMark className="hidden h-10 collapsed:md:flex" />
@@ -87,7 +86,7 @@ export function Sidebar({ tradingTz, displayTz, mobileOpen, onClose, accounts, t
         <div className="px-6 pb-4 text-sm leading-snug text-muted collapsed:md:hidden">{t.nav.workspace}</div>
 
         <nav className="flex-1 overflow-y-auto px-4 pb-4 collapsed:md:px-3">
-          <ul className="space-y-1.5">
+          <ul className="space-y-1">
             {main.map(({ href, label, icon: Icon, count }) => {
               const active = isActive(href) && !activeAccount;
               return (
@@ -112,7 +111,7 @@ export function Sidebar({ tradingTz, displayTz, mobileOpen, onClose, accounts, t
             </li>
           </ul>
 
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="mb-2 px-3.5 text-sm font-semibold text-muted collapsed:md:hidden">{t.nav.accounts}</div>
             <div className="mx-3 mb-2 hidden border-t border-line collapsed:md:block" />
             {accounts.length ? (
@@ -137,20 +136,22 @@ export function Sidebar({ tradingTz, displayTz, mobileOpen, onClose, accounts, t
             )}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="mb-2 px-3.5 text-sm font-semibold text-muted collapsed:md:hidden">{t.nav.analysis} · {t.nav.management}</div>
             <div className="mx-3 mb-2 hidden border-t border-line collapsed:md:block" />
             <ul className="space-y-1">
-              {planned.map(({ label, icon: Icon, phase }) => (
-                <li key={label}>
-                  <span className="flex cursor-not-allowed items-center gap-3 rounded-2xl px-3.5 py-2.5 text-[15px] font-medium text-faint collapsed:md:justify-center collapsed:md:px-0"
-                    title={fmt(t.nav.phase, { n: phase })} aria-disabled>
-                    <Icon className="h-5 w-5 shrink-0 opacity-70" aria-hidden />
-                    <span className="flex-1 truncate collapsed:md:hidden">{label}</span>
-                    <span className="rounded-md border border-line px-1.5 text-[10px] font-semibold collapsed:md:hidden">P{phase}</span>
-                  </span>
-                </li>
-              ))}
+              {planned.map(({ href, label, icon: Icon }) => {
+                const active = isActive(href);
+                return (
+                  <li key={href}>
+                    <Link href={href} onClick={onClose} title={label} aria-current={active ? "page" : undefined}
+                      className={cx(itemBase, active ? "bg-accent text-accent-fg shadow-glow" : "text-fg/85 hover:bg-surface-2 hover:text-fg")}>
+                      <Icon className={cx("h-5 w-5 shrink-0", active ? "" : "text-muted group-hover:text-fg")} aria-hidden />
+                      <span className="flex-1 truncate collapsed:md:hidden">{label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </nav>

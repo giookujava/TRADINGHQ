@@ -16,6 +16,9 @@ export interface Profile {
   display_timezone: string | null;
   currency: string;
   default_instrument_id: string | null;
+  ai_enabled?: boolean;
+  ai_model?: string;
+  ai_monthly_budget_usd?: number;
   created_at: Ts;
   updated_at: Ts;
 }
@@ -210,4 +213,48 @@ export interface DailyPrep {
   is_sample: boolean;
   created_at: Ts;
   updated_at: Ts;
+}
+
+export interface AccountTransaction {
+  id: string;
+  user_id: string;
+  account_id: string;
+  occurred_on: string;
+  kind: "deposit" | "withdrawal" | "payout" | "platform_fee" | "data_fee" | "other_expense" | "adjustment";
+  amount: Num;
+  notes: string;
+  source: string;
+  external_id: string | null;
+  is_sample: boolean;
+  created_at: Ts;
+}
+
+export interface KnowledgeEntry {
+  id: string;
+  user_id: string;
+  title: string;
+  kind: "concept" | "strategy" | "entry_model" | "rule" | "lesson" | "note" | "example";
+  body: string;
+  concept_key: "liquidity_sweep" | "displacement" | "mss" | "bos" | "fvg" | "order_block" | "smt_divergence" | "tf_alignment" | null;
+  strategy_id: string | null;
+  tag_id: string | null;
+  pinned: boolean;
+  created_at: Ts;
+  updated_at: Ts;
+}
+
+export interface AiConversation { id: string; user_id: string; title: string; created_at: Ts; updated_at: Ts }
+
+export interface AiMessage {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant";
+  content: string;
+  meta: { tools?: string[]; tradeIds?: string[]; error?: string };
+  model: string | null;
+  input_tokens: number;
+  cached_tokens: number;
+  output_tokens: number;
+  cost_usd: Num;
+  created_at: Ts;
 }

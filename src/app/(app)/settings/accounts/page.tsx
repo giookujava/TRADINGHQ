@@ -32,12 +32,22 @@ function AccountFields({ a, t }: { a?: Account; t: Dict }) {
       </div>
       <details className="mt-3">
         <summary className="cursor-pointer text-xs text-muted">{S.propRules}</summary>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label={S.propFirm}><input name="prop_firm" className="field" defaultValue={a?.prop_firm ?? ""} /></Field>
           <Field label={S.accountSize}><input name="account_size" className="field num" inputMode="decimal" defaultValue={a?.account_size ?? ""} /></Field>
           <Field label={S.profitTarget}><input name="profit_target" className="field num" inputMode="decimal" defaultValue={a?.profit_target ?? ""} /></Field>
           <Field label={S.dailyLoss}><input name="daily_loss_limit" className="field num" inputMode="decimal" defaultValue={a?.daily_loss_limit ?? ""} /></Field>
           <Field label={S.maxDd}><input name="max_drawdown" className="field num" inputMode="decimal" defaultValue={a?.max_drawdown ?? ""} /></Field>
+          <Field label={t.finance.ddType}>
+            <select name="drawdown_type" className="field" defaultValue={a?.drawdown_type ?? ""}>
+              <option value="">—</option>{(["static", "trailing", "eod_trailing"] as const).map((k) => <option key={k} value={k}>{t.finance.ddTypes[k]}</option>)}
+            </select>
+          </Field>
+          <Field label={t.finance.status}>
+            <select name="status" className="field" defaultValue={a?.status ?? "active"}>
+              {(["active", "passed", "failed", "funded", "closed"] as const).map((k) => <option key={k} value={k}>{t.finance.statuses[k]}</option>)}
+            </select>
+          </Field>
         </div>
       </details>
       <label className="mt-3 inline-flex items-center gap-2 text-sm text-muted">

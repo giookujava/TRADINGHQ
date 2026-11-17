@@ -81,3 +81,6 @@ export const KEY_LEVELS = [
 export const SCREENSHOT_BUCKET = "trade-screenshots";
 export const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
 export const SCREENSHOT_MIME = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+
+export const KNOWLEDGE_KINDS = ["concept", "strategy", "entry_model", "rule", "lesson", "note", "example"] as const;
+export type KnowledgeKind = (typeof KNOWLEDGE_KINDS)[number];

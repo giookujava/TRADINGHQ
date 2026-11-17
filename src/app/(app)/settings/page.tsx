@@ -1,10 +1,12 @@
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { Card, Field } from "@/components/ui";
+import { AI_MODELS, DEFAULT_AI_MODEL, isAiModel } from "@/lib/ai/models";
+import { openAiConfigured } from "@/lib/ai/openai";
 import { getProfile, getRefData } from "@/lib/data/queries";
 import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/supabase/server";
 import { formatInZone, tzAbbreviation } from "@/lib/time/zone";
-import { updateProfile } from "./actions";
+import { updateAiSettings, updateProfile } from "./actions";
 
 export const metadata = { title: "Settings" };
 
@@ -60,6 +62,23 @@ export default async function ProfileSettings() {
           ))}
         </dl>
         <p className="mt-4 text-xs leading-relaxed text-faint">{S.timeNote}</p>
+      </Card>
+      <Card title={t.assistant.settingsTitle} subtitle={t.assistant.settingsHint}>
+        <ActionForm action={updateAiSettings} className="space-y-4">
+          <label className="inline-flex items-center gap-2 text-sm">
+            <input type="checkbox" name="ai_enabled" defaultChecked={profile.ai_enabled !== false} className="h-4 w-4 accent-[var(--accent)]" /> {t.assistant.enable}
+          </label>
+          <Field label={t.assistant.model} hint={t.assistant.modelHint}>
+            <select name="ai_model" className="field" defaultValue={isAiModel(profile.ai_model) ? profile.ai_model : DEFAULT_AI_MODEL}>
+              {Object.entries(AI_MODELS).map(([id, m]) => <option key={id} value={id}>{m.label} (${m.input}/${m.output} per 1M)</option>)}
+            </select>
+          </Field>
+          <Field label={t.assistant.budget} hint={t.assistant.budgetHint}>
+            <input name="ai_monthly_budget_usd" type="number" min={0} max={1000} step="0.5" className="field num" defaultValue={profile.ai_monthly_budget_usd ?? 5} />
+          </Field>
+          <p className="text-xs text-faint">{openAiConfigured() ? t.assistant.keyOk : t.assistant.noKey}</p>
+          <SubmitButton className="btn-primary">{t.common.save}</SubmitButton>
+        </ActionForm>
       </Card>
     </div>
   );

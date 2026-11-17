@@ -7,6 +7,8 @@ import { Card, Empty, PageHeader, StatCard, StatRow, cx } from "@/components/ui"
 import { SESSIONS } from "@/lib/constants";
 import { bucketByPeriod, equitySeries, MIN_SAMPLE, summarize } from "@/lib/calc/stats";
 import { roundMoney, sum } from "@/lib/calc/money";
+import { signedAmount } from "@/lib/calc/finance";
+import { getCashflows } from "@/lib/data/analytics";
 import { hasActiveFilters, parseFilters } from "@/lib/data/filters";
 import { getProfile, getRefData, getTrades, type TradeListRow } from "@/lib/data/queries";
 import { fmtMoney, fmtNum, fmtPct, fmtR, pnlTone } from "@/lib/format";
@@ -69,7 +71,15 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
   const ids = new Set(balanceAccounts.map((a) => a.id));
   const startingBalance = roundMoney(sum(balanceAccounts.map((a) => Number(a.starting_balance))));
   const realized = roundMoney(sum(allTimeTrades.filter((x) => ids.has(x.account_id)).map((x) => Number(x.net_pnl ?? 0))));
-  const balance = roundMoney(startingBalance + realized);
+  // Cash flows (deposits, withdrawals, fees) change the balance but are never trading P/L.
+  let cashflows = 0;
+  try {
+    const flows = await getCashflows(supabase, { sample: filters.sample, accountId: filters.account });
+    cashflows = roundMoney(sum(flows.filter((x) => ids.has(x.account_id)).map((x) => signedAmount(x.kind, Number(x.amount)))));
+  } catch {
+    /* migration 0003 not applied yet: balance excludes cash flows */
+  }
+  const balance = roundMoney(startingBalance + realized + cashflows);
   const openCount = allTimeTrades.filter((x) => x.status === "open" && ids.has(x.account_id)).length;
 
   const s = summarize(trades);

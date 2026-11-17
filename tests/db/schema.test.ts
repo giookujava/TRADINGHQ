@@ -24,7 +24,7 @@ async function as<T>(uid: string, fn: () => Promise<T>): Promise<T> {
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(readFileSync(join(root, "tests/db/supabase-stub.sql"), "utf8"));
-  for (const f of ["0001_phase1_foundation.sql", "0002_api_grants.sql"]) {
+  for (const f of ["0001_phase1_foundation.sql", "0002_api_grants.sql", "0003_phase2_3.sql"]) {
     await db.exec(readFileSync(join(root, "supabase/migrations", f), "utf8"));
   }
   // Grants now come from 0002; keep storage grants for the stub.
@@ -200,5 +200,36 @@ describe("phase 1 migration", () => {
     await expect(
       as(A, () => db.query(`insert into daily_preps (user_id, prep_date) values ($1, '2026-03-09')`, [A])),
     ).rejects.toThrow();
+  });
+});
+
+describe("phase 2/3 migration", () => {
+  it("cash flows, knowledge and AI rows are isolated per user and guarded against cross-user references", async () => {
+    const accA = (await db.query<{ id: string }>(`select id from accounts where user_id = $1 limit 1`, [A])).rows[0].id;
+    const accB = (await db.query<{ id: string }>(`select id from accounts where user_id = $1 limit 1`, [B])).rows[0].id;
+    const tradeA = (await db.query<{ id: string }>(`select id from trades where user_id = $1 limit 1`, [A])).rows[0].id;
+
+    await as(A, () => db.query(`insert into account_transactions (user_id, account_id, occurred_on, kind, amount) values ($1,$2,'2026-03-01','deposit',1000)`, [A, accA]));
+    // amounts must be positive except adjustments
+    await expect(as(A, () => db.query(`insert into account_transactions (user_id, account_id, occurred_on, kind, amount) values ($1,$2,'2026-03-01','withdrawal',-5)`, [A, accA]))).rejects.toThrow();
+    // B cannot attach a cash flow to A's account
+    await expect(as(B, () => db.query(`insert into account_transactions (user_id, account_id, occurred_on, kind, amount) values ($1,$2,'2026-03-01','deposit',1)`, [B, accA]))).rejects.toThrow(/does not belong/);
+    const seenByB = await as(B, () => db.query(`select * from account_transactions`));
+    expect(seenByB.rows.length).toBe(0);
+
+    const entry = await as(A, () => db.query<{ id: string }>(`insert into knowledge_entries (user_id, title, concept_key) values ($1,'FVG','fvg') returning id`, [A]));
+    await as(A, () => db.query(`insert into knowledge_trade_links (entry_id, trade_id, user_id) values ($1,$2,$3)`, [entry.rows[0].id, tradeA, A]));
+    await expect(as(B, () => db.query(`insert into knowledge_trade_links (entry_id, trade_id, user_id) values ($1,$2,$3)`, [entry.rows[0].id, tradeA, B]))).rejects.toThrow();
+    await expect(as(A, () => db.query(`insert into knowledge_entries (user_id, title, concept_key) values ($1,'x','not_a_flag')`, [A]))).rejects.toThrow();
+
+    const conv = await as(A, () => db.query<{ id: string }>(`insert into ai_conversations (user_id, title) values ($1,'t') returning id`, [A]));
+    await as(A, () => db.query(`insert into ai_messages (user_id, conversation_id, role, content) values ($1,$2,'user','hi')`, [A, conv.rows[0].id]));
+    await expect(as(B, () => db.query(`insert into ai_messages (user_id, conversation_id, role, content) values ($1,$2,'user','x')`, [B, conv.rows[0].id]))).rejects.toThrow(/does not belong/);
+    expect((await as(B, () => db.query(`select * from ai_messages`))).rows.length).toBe(0);
+    expect((await as(B, () => db.query(`select * from knowledge_entries`))).rows.length).toBe(0);
+    void accB;
+
+    const p = await db.query<{ ai_model: string; ai_monthly_budget_usd: string }>(`select ai_model, ai_monthly_budget_usd::text from profiles where id = $1`, [A]);
+    expect(p.rows[0]).toMatchObject({ ai_model: "gpt-6.1-sol", ai_monthly_budget_usd: "5.00" });
   });
 });

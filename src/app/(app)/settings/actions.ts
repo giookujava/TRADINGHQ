@@ -1,13 +1,14 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { isAiModel } from "@/lib/ai/models";
 import { ACCOUNT_TYPES, CUSTOM_FIELD_TYPES, TAG_CATEGORIES } from "@/lib/constants";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/supabase/server";
 import { isValidTimeZone } from "@/lib/time/zone";
 import {
-  type ActionResult, checkbox, dbError, firstError, optNum, optText, optUuid, reqNum, reqText,
+  type ActionResult, checkbox, dbError, firstError, optEnum, optNum, optText, optUuid, reqNum, reqText,
 } from "@/lib/validation/common";
 
 const entries = (fd: FormData) => Object.fromEntries(fd.entries());
@@ -35,6 +36,22 @@ export async function updateProfile(_: ActionResult, fd: FormData): Promise<Acti
   return done("/settings");
 }
 
+// ---------------------------------------------------------------- AI assistant
+const aiSchema = z.object({
+  ai_enabled: checkbox,
+  ai_model: z.string().refine(isAiModel, "Unknown model."),
+  ai_monthly_budget_usd: z.coerce.number().min(0, "Budget must be 0 or more.").max(1000, "Budget is capped at $1000."),
+});
+
+export async function updateAiSettings(_: ActionResult, fd: FormData): Promise<ActionResult> {
+  const { supabase, userId } = await requireUser();
+  const p = aiSchema.safeParse(entries(fd));
+  if (!p.success) return { error: firstError(p.error) };
+  const { error } = await supabase.from("profiles").update(p.data).eq("id", userId);
+  if (error) return { error: dbError(error, "AI settings") };
+  return done("/settings", (await getT()).common.saved);
+}
+
 // ---------------------------------------------------------------- accounts
 const accountSchema = z.object({
   id: optUuid,
@@ -51,6 +68,8 @@ const accountSchema = z.object({
   profit_target: optNum,
   daily_loss_limit: optNum,
   max_drawdown: optNum,
+  drawdown_type: optEnum(["static", "trailing", "eod_trailing"] as const),
+  status: z.enum(["active", "passed", "failed", "funded", "closed"]).default("active"),
 });
 
 export async function saveAccount(_: ActionResult, fd: FormData): Promise<ActionResult> {
