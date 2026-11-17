@@ -4,9 +4,10 @@
  * Secret keys (service role, AI, broker) must NEVER be read from NEXT_PUBLIC_* vars.
  */
 export function supabaseEnv(): { url: string; key: string } | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key || url.includes("your-project") || key.startsWith("your-")) return null;
+  if (!configuredUrl || !key || configuredUrl.includes("your-project") || key.startsWith("your-")) return null;
+  const url = configuredUrl.replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
   return { url, key };
 }
 

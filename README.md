@@ -12,7 +12,7 @@ Private trading journal & analytics platform (Next.js + Supabase). See `docs/ARC
    `supabase/migrations/0002_api_grants.sql` the same way (API privileges; required on new projects).
 3. **Keys**: Project Settings → API Keys. Copy `.env.example` to `.env.local` and set
    `NEXT_PUBLIC_SUPABASE_URL` (the bare `https://<ref>.supabase.co`, without `/rest/v1/`) and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the legacy anon key as
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Do **not** put the secret/service-role key in this file.
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`). The app removes an accidental trailing `/rest/v1` from the URL, but the bare project URL is recommended. Do **not** put the secret/service-role key in this file.
 4. **Auth URLs**: Authentication → URL Configuration → Site URL `http://localhost:3000`, and add
    `http://localhost:3000/auth/callback` to Redirect URLs. (Optional for a local-only setup: Authentication →
    Sign In / Providers → Email → turn off “Confirm email”.)
