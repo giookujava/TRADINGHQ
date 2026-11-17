@@ -1,72 +1,74 @@
 @import "tailwindcss";
 
 /*
- * TRADING HQ design tokens.
- * Raw values live on :root (light) and [data-theme="dark"]. Tailwind utilities map to them through
- * @theme inline, so every `bg-surface`, `text-muted`, `border-line` … follows the active theme.
- * The theme attribute is set before first paint by the inline script in app/layout.tsx.
+ * TRADING HQ design tokens — ICEOFF-style: near-black canvas, floating rounded panels,
+ * bright cyan accent with soft glow. Raw values live on :root (light) and [data-theme="dark"];
+ * Tailwind utilities map to them through @theme inline. The theme attribute is set before first
+ * paint by the inline script in app/layout.tsx.
  */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 /* Sidebar collapsed state (desktop), set before paint from localStorage. */
 @custom-variant collapsed (&:where([data-sidebar="collapsed"] *));
 
 :root {
-  --bg: #f5f7fa;
+  --bg: #eef2f6;
   --bg-elev: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f2f5f9;
-  --surface-3: #e9eef4;
-  --line: #e4e9f0;
-  --line-strong: #d3dae4;
-  --fg: #172231;
-  --muted: #5d6b7e;
-  --faint: #7b8a9e;
-  --accent: #1192a7;
-  --accent-strong: #0d7f92;
-  --accent-soft: #e3f4f7;
+  --surface-2: #f3f6f9;
+  --surface-3: #e8edf2;
+  --line: #e1e7ee;
+  --line-strong: #cfd8e2;
+  --fg: #111a26;
+  --muted: #5a6779;
+  --faint: #7a8799;
+  --accent: #06b6cc;
+  --accent-strong: #0598ab;
+  --accent-soft: #dff6fa;
   --accent-fg: #ffffff;
   --profit: #15803d;
-  --profit-soft: #e6f4ea;
+  --profit-soft: #e5f4ea;
   --loss: #d92d2d;
-  --loss-soft: #fdecec;
+  --loss-soft: #fdeaea;
   --warn: #b45309;
-  --warn-soft: #fdf3e2;
-  --ring: rgba(17, 146, 167, 0.35);
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-md: 0 4px 16px -4px rgba(16, 24, 40, 0.10), 0 1px 3px rgba(16, 24, 40, 0.06);
-  --chart-grid: #edf1f5;
-  --chart-axis: #7b8a9e;
-  --chart-line: #1192a7;
+  --warn-soft: #fdf2e1;
+  --ring: rgba(6, 182, 204, 0.35);
+  --glow: 0 8px 24px -6px rgba(6, 182, 204, 0.45);
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 10px 30px -10px rgba(16, 24, 40, 0.18), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --chart-grid: #e9eef3;
+  --chart-axis: #7a8799;
+  --chart-line: #06b6cc;
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --bg: #0b0f14;
-  --bg-elev: #0f151c;
-  --surface: #131b24;
-  --surface-2: #18212c;
-  --surface-3: #1f2a36;
-  --line: #1f2934;
-  --line-strong: #2b3846;
-  --fg: #eef2f7;
-  --muted: #97a4b6;
-  --faint: #6f7d93;
-  --accent: #29b9ca;
-  --accent-strong: #1fa3b3;
-  --accent-soft: rgba(41, 185, 202, 0.12);
-  --accent-fg: #03181c;
-  --profit: #2fc46f;
-  --profit-soft: rgba(47, 196, 111, 0.12);
-  --loss: #f26060;
-  --loss-soft: rgba(242, 96, 96, 0.12);
-  --warn: #e3a63c;
-  --warn-soft: rgba(227, 166, 60, 0.12);
-  --ring: rgba(41, 185, 202, 0.4);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.35);
-  --chart-grid: #1b2430;
-  --chart-axis: #6f7d93;
-  --chart-line: #29b9ca;
+  --bg: #0a0d12;
+  --bg-elev: #11151c;
+  --surface: #12161d;
+  --surface-2: #171c24;
+  --surface-3: #1e242e;
+  --line: #1f252f;
+  --line-strong: #2a313c;
+  --fg: #f3f5f8;
+  --muted: #929cab;
+  --faint: #677283;
+  --accent: #2dd4e8;
+  --accent-strong: #19bcd0;
+  --accent-soft: rgba(45, 212, 232, 0.12);
+  --accent-fg: #03161a;
+  --profit: #34d07f;
+  --profit-soft: rgba(52, 208, 127, 0.12);
+  --loss: #f45f5f;
+  --loss-soft: rgba(244, 95, 95, 0.12);
+  --warn: #eaa93f;
+  --warn-soft: rgba(234, 169, 63, 0.12);
+  --ring: rgba(45, 212, 232, 0.4);
+  --glow: 0 10px 30px -8px rgba(45, 212, 232, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 16px 40px -12px rgba(0, 0, 0, 0.7), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --chart-grid: #1a2029;
+  --chart-axis: #677283;
+  --chart-line: #2dd4e8;
   color-scheme: dark;
 }
 
@@ -96,7 +98,8 @@
   --color-warn-soft: var(--warn-soft);
   --shadow-card: var(--shadow-sm);
   --shadow-pop: var(--shadow-md);
-  --font-sans: var(--font-geist-sans);
+  --shadow-glow: var(--glow);
+  --font-sans: var(--font-geist-sans), var(--font-georgian);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -107,10 +110,15 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist-sans), var(--font-georgian), ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Georgian text reads better slightly larger with more line height. */
+html[lang="ka"] body {
+  line-height: 1.55;
 }
 
 ::selection {
@@ -131,15 +139,15 @@ body {
 /* Component classes live in the components layer so utilities (hidden, w-*, py-*) can override them. */
 @layer components {
   .field {
-    @apply w-full rounded-md border border-line-strong bg-surface px-2.5 py-1.5 text-sm text-fg shadow-card
+    @apply w-full rounded-xl border border-line-strong bg-surface-2 px-3 py-2 text-sm text-fg
       transition-colors placeholder:text-faint hover:border-faint
-      focus:border-accent focus:outline-none focus:ring-3 focus:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60;
+      focus:border-accent focus:bg-surface focus:outline-none focus:ring-3 focus:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60;
   }
   textarea.field {
-    @apply min-h-[84px] leading-relaxed;
+    @apply min-h-[88px] leading-relaxed;
   }
   select.field {
-    @apply pr-7;
+    @apply pr-8;
   }
   .label {
     @apply mb-1.5 block text-xs font-medium text-muted;
@@ -148,27 +156,34 @@ body {
     @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-faint;
   }
   .btn {
-    @apply inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-line-strong bg-surface px-3
-      text-sm font-medium text-fg shadow-card transition-[background-color,border-color,color,box-shadow]
-      hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-line-strong bg-surface-2 px-3.5
+      text-sm font-semibold text-fg transition-[background-color,border-color,color,box-shadow]
+      hover:border-faint hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply border-transparent bg-accent text-accent-fg hover:bg-accent-strong;
+    @apply rounded-full border-transparent bg-accent px-5 text-accent-fg shadow-glow hover:border-transparent hover:bg-accent-strong;
   }
   .btn-danger {
-    @apply border-loss/30 bg-loss-soft text-loss shadow-none hover:border-loss/60;
+    @apply border-loss/30 bg-loss-soft text-loss hover:border-loss/60 hover:bg-loss-soft;
   }
   .btn-ghost {
-    @apply border-transparent bg-transparent shadow-none hover:bg-surface-2;
+    @apply border-transparent bg-transparent hover:border-transparent hover:bg-surface-2;
   }
   .btn-sm {
-    @apply h-7 px-2.5 text-xs;
+    @apply h-8 rounded-lg px-3 text-xs;
   }
   .btn-icon {
-    @apply h-8 w-8 px-0;
+    @apply h-9 w-9 px-0;
   }
   .card {
-    @apply rounded-xl border border-line bg-surface shadow-card;
+    @apply rounded-2xl border border-line bg-surface shadow-card;
+  }
+  .panel {
+    @apply rounded-[26px] border border-line bg-surface shadow-pop;
+  }
+  .chip {
+    @apply inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-xl border border-line bg-surface px-3.5 text-sm font-semibold text-fg
+      transition-colors hover:border-line-strong;
   }
   .table {
     @apply w-full border-collapse text-sm;
@@ -189,7 +204,10 @@ body {
     @apply border-b-0;
   }
   .skeleton {
-    @apply animate-pulse rounded-md bg-surface-3;
+    @apply animate-pulse rounded-xl bg-surface-3;
+  }
+  .kbd {
+    @apply inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-line-strong bg-surface-3 px-1.5 text-[11px] font-medium text-faint;
   }
 }
 

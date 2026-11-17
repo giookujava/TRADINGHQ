@@ -1,10 +1,12 @@
 "use client";
 import { useState, useTransition } from "react";
 import { Notice } from "@/components/ui";
+import { useT } from "@/lib/i18n/client";
 import type { ActionResult } from "@/lib/validation/common";
 import { generateSampleData, removeSampleData } from "./actions";
 
 export function SampleDataControls({ hasSample }: { hasSample: boolean }) {
+  const t = useT();
   const [pending, start] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
   const run = (fn: () => Promise<ActionResult>, confirmText?: string) => {
@@ -15,11 +17,11 @@ export function SampleDataControls({ hasSample }: { hasSample: boolean }) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         <button type="button" className="btn" disabled={pending || hasSample} onClick={() => run(generateSampleData)}>
-          {pending ? "Working…" : "Generate sample data"}
+          {pending ? t.set.working : t.set.generateSample}
         </button>
         <button type="button" className="btn btn-danger" disabled={pending || !hasSample}
-          onClick={() => run(removeSampleData, "Delete ALL sample trades, sample preparations and the sample account? Your real records are not affected.")}>
-          Remove sample data
+          onClick={() => run(removeSampleData, t.set.removeSampleConfirm)}>
+          {t.set.removeSample}
         </button>
       </div>
       {result?.error ? <Notice tone="error">{result.error}</Notice> : null}

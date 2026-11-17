@@ -7,6 +7,8 @@ import { getProfile } from "@/lib/data/queries";
 import { generateSampleTrades } from "@/lib/sample/generate";
 import { requireUser } from "@/lib/supabase/server";
 import { todayInZone } from "@/lib/time/zone";
+import { fmt } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import type { ActionResult } from "@/lib/validation/common";
 
 const SAMPLE_ACCOUNT = "SAMPLE — Backtest";
@@ -14,12 +16,12 @@ const SAMPLE_ACCOUNT = "SAMPLE — Backtest";
 export async function generateSampleData(): Promise<ActionResult> {
   const { supabase, userId } = await requireUser();
   const existing = await supabase.from("trades").select("id", { count: "exact", head: true }).eq("is_sample", true);
-  if (existing.count) return { error: "Sample data already exists. Remove it first." };
+  if (existing.count) return { error: (await getT()).msg.sampleExists };
 
   const profile = await getProfile(supabase, userId);
   const inst = await supabase.from("instruments").select("*").in("symbol", ["MNQ", "MES"]);
   const bySym = new Map(((inst.data ?? []) as Instrument[]).map((i) => [i.symbol, i]));
-  if (!bySym.get("MNQ") || !bySym.get("MES")) return { error: "MNQ and MES instruments are required for sample data." };
+  if (!bySym.get("MNQ") || !bySym.get("MES")) return { error: (await getT()).msg.sampleNeedsInstruments };
 
   const acc = await supabase
     .from("accounts")
@@ -69,7 +71,7 @@ export async function generateSampleData(): Promise<ActionResult> {
   }
 
   revalidatePath("/", "layout");
-  return { ok: true, message: `Created ${trades.length} sample trades in “${SAMPLE_ACCOUNT}”. Tick “Include sample data” to see them.` };
+  return { ok: true, message: fmt((await getT()).msg.sampleCreated, { n: trades.length, a: SAMPLE_ACCOUNT }) };
 }
 
 export async function removeSampleData(): Promise<ActionResult> {
@@ -84,5 +86,5 @@ export async function removeSampleData(): Promise<ActionResult> {
   if (a.error) return { error: `Sample trades removed, but the sample account could not be deleted: ${a.error.message}` };
   if (paths.length) await supabase.storage.from(SCREENSHOT_BUCKET).remove(paths);
   revalidatePath("/", "layout");
-  return { ok: true, message: `Removed ${t.count ?? 0} sample trades and ${p.count ?? 0} sample preparations.` };
+  return { ok: true, message: fmt((await getT()).msg.sampleRemoved, { t: t.count ?? 0, p: p.count ?? 0 }) };
 }

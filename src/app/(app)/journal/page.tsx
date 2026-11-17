@@ -7,28 +7,32 @@ import { summarize } from "@/lib/calc/stats";
 import { filtersToSearch, hasActiveFilters, parseFilters } from "@/lib/data/filters";
 import { getProfile, getRefData, getTrades } from "@/lib/data/queries";
 import { fmtMoney, fmtNum, fmtPct, fmtR, pnlTone } from "@/lib/format";
+import { fmt } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/supabase/server";
 import { todayInZone } from "@/lib/time/zone";
 
 export const metadata = { title: "Trade Journal" };
 
 export default async function JournalPage({ searchParams }: PageProps<"/journal">) {
-  const filters = parseFilters(await searchParams);
+  const sp = await searchParams;
+  const filters = parseFilters(sp);
+  const q = typeof sp.q === "string" ? sp.q.slice(0, 100) : undefined;
   const { supabase, userId } = await requireUser();
-  const [profile, ref, trades] = await Promise.all([getProfile(supabase, userId), getRefData(supabase), getTrades(supabase, filters)]);
+  const [t, profile, ref, trades] = await Promise.all([getT(), getProfile(supabase, userId), getRefData(supabase), getTrades(supabase, filters)]);
   const s = summarize(trades);
   const exportQs = filtersToSearch(filters);
+  const J = t.journal, D = t.dashboard;
 
   return (
-    <div className="mx-auto max-w-[1400px]">
+    <div className="mx-auto max-w-[1500px]">
       <PageHeader
-        eyebrow="Overview"
-        title="Trade journal"
-        subtitle="Every recorded trade — backtest, demo, evaluation, funded and live."
+        title={J.title}
+        subtitle={J.subtitle}
         actions={
           <>
-            <a href={`/api/export/trades${exportQs}`} className="btn"><Download className="h-4 w-4" /> Export CSV</a>
-            <Link href="/journal/new" className="btn btn-primary"><Plus className="h-4 w-4" /> New trade</Link>
+            <a href={`/api/export/trades${exportQs}`} className="btn h-12 rounded-full px-5"><Download className="h-4 w-4" /> {J.export}</a>
+            <Link href="/journal/new" className="btn btn-primary h-12 px-6 text-[15px]"><Plus className="h-5 w-5" /> {J.newTrade}</Link>
           </>
         }
       />
@@ -43,25 +47,27 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
       {trades.length === 0 ? (
         <Empty
           icon={<BookOpen className="h-5 w-5" />}
-          title={hasActiveFilters(filters) ? "No trades match these filters" : "No trades recorded yet"}
-          action={hasActiveFilters(filters) ? <Link href="/journal" className="btn">Clear filters</Link> : <Link href="/journal/new" className="btn btn-primary">Record your first trade</Link>}
+          title={hasActiveFilters(filters) ? J.emptyFiltered : J.empty}
+          action={hasActiveFilters(filters) ? <Link href="/journal" className="btn">{J.clearFilters}</Link> : <Link href="/journal/new" className="btn btn-primary">{J.recordFirst}</Link>}
         >
-          {hasActiveFilters(filters) ? "Try widening the date range or removing a filter." : "Record fills exactly as executed — multiple entries and partial exits are supported."}
+          {hasActiveFilters(filters) ? J.emptyFilteredHint : J.emptyHint}
         </Empty>
       ) : (
         <>
-          <div className="card mb-4 grid grid-cols-2 gap-x-6 gap-y-4 p-5 sm:grid-cols-3 lg:grid-cols-6">
-            <Metric label="Trades" value={trades.length} hint={`${s.closedTrades} closed · ${s.openTrades} open`} />
-            <Metric label="Net P/L" value={fmtMoney(s.netPnl, "USD", true)} tone={pnlTone(s.netPnl)} />
-            <Metric label="Win rate" value={fmtPct(s.winRate)} hint={`${s.wins}W · ${s.losses}L`} />
-            <Metric label="Profit factor" value={s.profitFactor == null ? "—" : fmtNum(s.profitFactor)} />
-            <Metric label="Average R" value={fmtR(s.avgR)} tone={pnlTone(s.avgR)} />
-            <Metric label="Fees" value={fmtMoney(s.totalFees)} hint="included in net" />
+          <div className="card mb-5 grid grid-cols-2 gap-x-6 gap-y-4 p-6 sm:grid-cols-3 lg:grid-cols-6">
+            <Metric label={J.trades} value={trades.length} hint={fmt(D.closedOpen, { c: s.closedTrades, o: s.openTrades })} />
+            <Metric label={D.netPnl} value={fmtMoney(s.netPnl, "USD", true)} tone={pnlTone(s.netPnl)} />
+            <Metric label={D.winRate} value={fmtPct(s.winRate)} hint={`${s.wins}W · ${s.losses}L`} />
+            <Metric label={D.profitFactor} value={s.profitFactor == null ? "—" : fmtNum(s.profitFactor)} />
+            <Metric label={D.avgR} value={fmtR(s.avgR)} tone={pnlTone(s.avgR)} />
+            <Metric label={D.fees} value={fmtMoney(s.totalFees)} hint={J.included} />
           </div>
           <section className="card overflow-hidden">
             <TradeTable
+              key={q ?? ""}
               rows={trades}
               searchable
+              initialQuery={q}
               tz={profile.trading_timezone}
               symbols={Object.fromEntries(ref.instruments.map((i) => [i.id, i.symbol]))}
               accounts={Object.fromEntries(ref.accounts.map((a) => [a.id, a.name]))}

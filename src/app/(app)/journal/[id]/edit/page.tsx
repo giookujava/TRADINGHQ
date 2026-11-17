@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui";
 import { getProfile, getRefData } from "@/lib/data/queries";
 import { getTradeDetail } from "@/lib/data/trade-detail";
+import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/supabase/server";
 import { localDateTimeInZone, todayInZone } from "@/lib/time/zone";
 import { uuid } from "@/lib/validation/common";
@@ -13,7 +14,7 @@ export default async function EditTradePage({ params }: PageProps<"/journal/[id]
   const { id } = await params;
   if (!uuid.safeParse(id).success) notFound();
   const { supabase, userId } = await requireUser();
-  const [profile, ref, detail] = await Promise.all([getProfile(supabase, userId), getRefData(supabase), getTradeDetail(supabase, id)]);
+  const [t, profile, ref, detail] = await Promise.all([getT(), getProfile(supabase, userId), getRefData(supabase), getTradeDetail(supabase, id)]);
   if (!detail) notFound();
   const tz = profile.trading_timezone;
   const entrySide = detail.trade.direction === "long" ? "buy" : "sell";
@@ -27,8 +28,8 @@ export default async function EditTradePage({ params }: PageProps<"/journal/[id]
     feeAuto: false,
   }));
   return (
-    <div className="mx-auto max-w-7xl">
-      <PageHeader eyebrow="Trade journal" title="Edit trade" subtitle={`${detail.trade.trade_date}`} />
+    <div className="mx-auto max-w-[1500px]">
+      <PageHeader eyebrow={t.journal.back} title={t.journal.editTitle} subtitle={detail.trade.trade_date} />
       <TradeForm
         {...ref}
         trade={detail.trade}

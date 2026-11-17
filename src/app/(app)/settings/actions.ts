@@ -2,6 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ACCOUNT_TYPES, CUSTOM_FIELD_TYPES, TAG_CATEGORIES } from "@/lib/constants";
+import { fmt } from "@/lib/i18n";
+import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/supabase/server";
 import { isValidTimeZone } from "@/lib/time/zone";
 import {
@@ -57,10 +59,10 @@ export async function saveAccount(_: ActionResult, fd: FormData): Promise<Action
     const id = optUuid.parse(fd.get("id"));
     if (!id) return { error: "Missing account." };
     const { count } = await supabase.from("trades").select("id", { count: "exact", head: true }).eq("account_id", id);
-    if (count) return { error: `This account has ${count} trade(s). Deactivate it instead, or delete its trades first.` };
+    if (count) return { error: fmt((await getT()).msg.accountHasTrades, { n: count }) };
     const { error } = await supabase.from("accounts").delete().eq("id", id);
     if (error) return { error: dbError(error, "account") };
-    return done("/settings/accounts", "Deleted.");
+    return done("/settings/accounts", (await getT()).msg.deleted);
   }
   const p = accountSchema.safeParse(entries(fd));
   if (!p.success) return { error: firstError(p.error) };
@@ -69,7 +71,7 @@ export async function saveAccount(_: ActionResult, fd: FormData): Promise<Action
     ? await supabase.from("accounts").update(row).eq("id", id)
     : await supabase.from("accounts").insert({ ...row, user_id: userId });
   if (error) return { error: dbError(error, "account") };
-  return done("/settings/accounts", id ? "Saved." : "Account created.");
+  { const t = await getT(); return done("/settings/accounts", id ? t.common.saved : t.msg.accountCreated); }
 }
 
 // ---------------------------------------------------------------- instruments
@@ -94,7 +96,7 @@ export async function saveInstrument(_: ActionResult, fd: FormData): Promise<Act
     if (!id) return { error: "Missing instrument." };
     const { error } = await supabase.from("instruments").delete().eq("id", id);
     if (error) return { error: dbError(error, "instrument") };
-    return done("/settings/instruments", "Deleted.");
+    return done("/settings/instruments", (await getT()).msg.deleted);
   }
   const p = instrumentSchema.safeParse(entries(fd));
   if (!p.success) return { error: firstError(p.error) };
@@ -105,7 +107,7 @@ export async function saveInstrument(_: ActionResult, fd: FormData): Promise<Act
   if (error) return { error: dbError(error, "instrument") };
   return done(
     "/settings/instruments",
-    id ? "Saved. Existing trades keep their stored P/L until re-saved." : "Instrument added.",
+    id ? (await getT()).msg.instrumentSaved : (await getT()).msg.instrumentAdded,
   );
 }
 
@@ -124,7 +126,7 @@ export async function saveStrategy(_: ActionResult, fd: FormData): Promise<Actio
     if (!id) return { error: "Missing strategy." };
     const { error } = await supabase.from("strategies").delete().eq("id", id);
     if (error) return { error: dbError(error, "strategy") };
-    return done("/settings/journal", "Deleted. Trades that used it now show no strategy.");
+    return done("/settings/journal", (await getT()).msg.strategyDeleted);
   }
   const p = strategySchema.safeParse(entries(fd));
   if (!p.success) return { error: firstError(p.error) };
@@ -151,7 +153,7 @@ export async function saveTag(_: ActionResult, fd: FormData): Promise<ActionResu
     if (!id) return { error: "Missing tag." };
     const { error } = await supabase.from("tags").delete().eq("id", id);
     if (error) return { error: dbError(error, "tag") };
-    return done("/settings/journal", "Deleted.");
+    return done("/settings/journal", (await getT()).msg.deleted);
   }
   const p = tagSchema.safeParse(entries(fd));
   if (!p.success) return { error: firstError(p.error) };
@@ -180,13 +182,13 @@ export async function saveCustomField(_: ActionResult, fd: FormData): Promise<Ac
     if (!id) return { error: "Missing field." };
     const { error } = await supabase.from("custom_field_definitions").delete().eq("id", id);
     if (error) return { error: dbError(error, "custom field") };
-    return done("/settings/journal", "Deleted. Values already stored on trades are kept in exports.");
+    return done("/settings/journal", (await getT()).msg.fieldDeleted);
   }
   const p = customFieldSchema.safeParse(entries(fd));
   if (!p.success) return { error: firstError(p.error) };
   const { id, options, ...rest } = p.data;
   const opts = options.split(",").map((s) => s.trim()).filter(Boolean);
-  if (rest.field_type === "select" && opts.length < 2) return { error: "A select field needs at least two comma-separated options." };
+  if (rest.field_type === "select" && opts.length < 2) return { error: (await getT()).msg.selectNeedsOptions };
   const row = { ...rest, options: rest.field_type === "select" ? opts : [] };
   const { error } = id
     ? await supabase.from("custom_field_definitions").update(row).eq("id", id)

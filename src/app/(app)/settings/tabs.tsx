@@ -3,35 +3,32 @@ import { Database, Layers, Plug, Tag, UserRound, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cx } from "@/components/ui";
-
-const TABS = [
-  ["/settings", "Profile", UserRound],
-  ["/settings/accounts", "Accounts", Wallet],
-  ["/settings/instruments", "Instruments", Layers],
-  ["/settings/journal", "Strategies, tags & fields", Tag],
-  ["/settings/data", "Data & backups", Database],
-  ["/settings/integrations", "Integrations", Plug],
-] as const;
+import { useT } from "@/lib/i18n/client";
 
 export function SettingsTabs() {
+  const t = useT();
   const pathname = usePathname();
+  const tabs = [
+    ["/settings", t.settings.profile, UserRound],
+    ["/settings/accounts", t.settings.accounts, Wallet],
+    ["/settings/instruments", t.settings.instruments, Layers],
+    ["/settings/journal", t.settings.journal, Tag],
+    ["/settings/data", t.settings.data, Database],
+    ["/settings/integrations", t.settings.integrations, Plug],
+  ] as const;
   return (
-    <nav aria-label="Settings sections" className="-mx-1 flex gap-1 overflow-x-auto border-b border-line px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {TABS.map(([href, label, Icon]) => (
-        <Link
-          key={href}
-          href={href}
-          aria-current={pathname === href ? "page" : undefined}
-          className={cx(
-            "-mb-px inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
-            pathname === href ? "border-accent text-fg" : "border-transparent text-muted hover:text-fg",
-          )}
-        >
-          <Icon className="h-4 w-4 opacity-70" aria-hidden />
-          {label}
-        </Link>
-      ))}
+    <nav aria-label={t.settings.title} className="flex gap-1.5 overflow-x-auto rounded-2xl border border-line bg-surface p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {tabs.map(([href, label, Icon]) => {
+        const active = pathname === href;
+        return (
+          <Link key={href} href={href} aria-current={active ? "page" : undefined}
+            className={cx("inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-bold transition-colors",
+              active ? "bg-accent text-accent-fg shadow-glow" : "text-muted hover:bg-surface-2 hover:text-fg")}>
+            <Icon className="h-4 w-4" aria-hidden />
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
-

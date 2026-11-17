@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { BIASES, EXPECTED_DIRECTIONS, KEY_LEVELS, SESSIONS, VOLATILITY } from "@/lib/constants";
+import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/supabase/server";
 import { type ActionResult, dbError, firstError, isoDate, optEnum, optNum, optText, optUuid, triBool, uuid } from "@/lib/validation/common";
 
@@ -64,7 +65,7 @@ export async function savePrep(_: ActionResult, fd: FormData): Promise<ActionRes
   }
   revalidatePath("/prep", "layout");
   if (!id) redirect(`/prep/${row.prep_date}?id=${savedId}`);
-  return { ok: true, message: "Saved." };
+  return { ok: true, message: (await getT()).common.saved };
 }
 
 export async function deletePrep(fd: FormData) {

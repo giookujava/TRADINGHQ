@@ -1,6 +1,7 @@
 "use client";
 import { TriangleAlert } from "lucide-react";
 import { startTransition, useActionState, useEffect, useRef, type FormEvent, type ReactNode } from "react";
+import { useT } from "@/lib/i18n/client";
 import type { ActionResult } from "@/lib/validation/common";
 import { useToast } from "./toast";
 import { cx } from "./ui";
@@ -13,8 +14,9 @@ type Action = (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
  * when the server rejects it; `action` stays as the no-JS / pre-hydration fallback (a real POST).
  */
 export function ActionForm({
-  action, children, className, resetOnSuccess, successText = "Saved.",
+  action, children, className, resetOnSuccess, successText,
 }: { action: Action; children: ReactNode; className?: string; resetOnSuccess?: boolean; successText?: string }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState<ActionResult, FormData>(action, {});
   const ref = useRef<HTMLFormElement>(null);
   const toast = useToast();
@@ -23,10 +25,10 @@ export function ActionForm({
     if (state === seen.current) return;
     seen.current = state;
     if (state.ok) {
-      toast("success", state.message ?? successText);
+      toast("success", state.message ?? successText ?? t.common.saved);
       if (resetOnSuccess) ref.current?.reset();
     }
-  }, [state, resetOnSuccess, toast, successText]);
+  }, [state, resetOnSuccess, toast, successText, t]);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,11 +53,12 @@ export function ActionForm({
  * Submit button. With `confirm`, the first click opens an accessible confirmation dialog and the
  * confirmed click re-submits the form with this button's name/value.
  */
-export function SubmitButton({ children, className, name, value, confirm, confirmLabel = "Delete" }: {
+export function SubmitButton({ children, className, name, value, confirm, confirmLabel }: {
   children: ReactNode; className?: string; name?: string; value?: string; confirm?: string; confirmLabel?: string;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  const t = useT();
   const armed = useRef(false);
   return (
     <>
@@ -83,18 +86,18 @@ export function SubmitButton({ children, className, name, value, confirm, confir
             <div className="flex items-start gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-loss-soft text-loss"><TriangleAlert className="h-4 w-4" /></div>
               <div>
-                <h2 className="font-semibold">Are you sure?</h2>
+                <h2 className="font-semibold">{t.common.areYouSure}</h2>
                 <p className="mt-1 text-sm text-muted">{confirm}</p>
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" className="btn" onClick={() => dialog.current?.close()}>Cancel</button>
+              <button type="button" className="btn" onClick={() => dialog.current?.close()}>{t.common.cancel}</button>
               <button
                 type="button"
                 className="btn btn-danger"
                 onClick={() => { dialog.current?.close(); armed.current = true; setTimeout(() => ref.current?.click(), 0); }}
               >
-                {confirmLabel}
+                {confirmLabel ?? t.common.delete}
               </button>
             </div>
           </div>

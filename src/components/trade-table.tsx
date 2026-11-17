@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { SESSION_LABELS, TRADE_TYPE_LABELS } from "@/lib/constants";
+import { fmt } from "@/lib/i18n";
+import { useT } from "@/lib/i18n/client";
 import { formatDuration } from "@/lib/calc/trade";
 import type { TradeListRow } from "@/lib/data/queries";
 import { fmtMoney, fmtPrice, fmtR } from "@/lib/format";
@@ -33,7 +35,7 @@ function Th({ k, children, right, sort, setSort, sortable }: {
 function InstrumentChip({ symbol }: { symbol: string }) {
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-surface-3 text-[10px] font-bold text-muted" aria-hidden>
+      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-accent/40 bg-accent-soft text-[10px] font-bold text-accent" aria-hidden>
         {symbol.slice(0, 2)}
       </span>
       <span className="font-semibold">{symbol}</span>
@@ -45,19 +47,20 @@ function InstrumentChip({ symbol }: { symbol: string }) {
  * Trade list table. Sorting and text search are client-side over the rows the server already
  * filtered, so they never change which records the statistics are based on.
  */
-export function TradeTable({ rows, symbols, accounts, strategies, tz, compact, searchable }: {
+export function TradeTable({ rows, symbols, accounts, strategies, tz, compact, searchable, initialQuery }: {
   rows: TradeListRow[]; symbols: Record<string, string>; accounts: Record<string, string>; strategies: Record<string, string>;
-  tz: string; compact?: boolean; searchable?: boolean;
+  tz: string; compact?: boolean; searchable?: boolean; initialQuery?: string;
 }) {
   const router = useRouter();
-  const [q, setQ] = useState("");
+  const L = useT();
+  const [q, setQ] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<SortState>({ key: "date", dir: -1 });
 
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const filtered = needle
       ? rows.filter((t) => [symbols[t.instrument_id], accounts[t.account_id], t.strategy_id ? strategies[t.strategy_id] : "",
-          t.session ? SESSION_LABELS[t.session] : "", t.direction, t.trade_date, TRADE_TYPE_LABELS[t.trade_type]]
+          t.session ? `${SESSION_LABELS[t.session]} ${L.labels.sessions[t.session]}` : "", t.direction, t.trade_date, TRADE_TYPE_LABELS[t.trade_type]]
           .join(" ").toLowerCase().includes(needle))
       : rows;
     const val = (t: TradeListRow): number | string => {
@@ -74,7 +77,7 @@ export function TradeTable({ rows, symbols, accounts, strategies, tz, compact, s
       const x = val(a), y = val(b);
       return (x < y ? -1 : x > y ? 1 : 0) * sort.dir;
     });
-  }, [rows, q, sort, symbols, accounts, strategies]);
+  }, [rows, q, sort, symbols, accounts, strategies, L]);
 
   const thProps = { sort, setSort, sortable: !compact };
 
@@ -84,29 +87,29 @@ export function TradeTable({ rows, symbols, accounts, strategies, tz, compact, s
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-3">
           <label className="relative block w-full max-w-xs">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-faint" aria-hidden />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search symbol, strategy, session…" aria-label="Search trades" className="field pl-8" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L.table.search} aria-label={L.table.search} className="field pl-8" />
           </label>
-          <span className="text-xs text-muted">{view.length === rows.length ? `${rows.length} trades` : `${view.length} of ${rows.length} trades`}</span>
+          <span className="text-xs text-muted">{view.length === rows.length ? fmt(L.table.countAll, { n: rows.length }) : fmt(L.table.countSome, { v: view.length, n: rows.length })}</span>
         </div>
       ) : null}
       <div className="overflow-x-auto">
         <table className="table">
           <thead>
             <tr>
-              <Th {...thProps} k="date">Date</Th>
-              <Th {...thProps} k="symbol">Instrument</Th>
-              <th>Side</th>
-              <th>Session</th>
-              <th>Strategy</th>
-              {!compact ? <th>Account</th> : null}
-              <Th {...thProps} k="qty" right>Qty</Th>
-              {!compact ? <th className="text-right">Entry</th> : null}
-              {!compact ? <th className="text-right">Exit</th> : null}
-              <Th {...thProps} k="net" right>Net P/L</Th>
+              <Th {...thProps} k="date">{L.table.date}</Th>
+              <Th {...thProps} k="symbol">{L.table.instrument}</Th>
+              <th>{L.table.side}</th>
+              <th>{L.table.session}</th>
+              <th>{L.table.strategy}</th>
+              {!compact ? <th>{L.table.account}</th> : null}
+              <Th {...thProps} k="qty" right>{L.table.qty}</Th>
+              {!compact ? <th className="text-right">{L.table.entry}</th> : null}
+              {!compact ? <th className="text-right">{L.table.exit}</th> : null}
+              <Th {...thProps} k="net" right>{L.table.net}</Th>
               <Th {...thProps} k="r" right>R</Th>
-              {!compact ? <Th {...thProps} k="held" right>Held</Th> : null}
-              {!compact ? <th>Rules</th> : null}
-              <th>Status</th>
+              {!compact ? <Th {...thProps} k="held" right>{L.table.held}</Th> : null}
+              {!compact ? <th>{L.table.rules}</th> : null}
+              <th>{L.table.status}</th>
             </tr>
           </thead>
           <tbody>
@@ -121,11 +124,11 @@ export function TradeTable({ rows, symbols, accounts, strategies, tz, compact, s
                   </td>
                   <td><Link href={href} className="hover:text-accent"><InstrumentChip symbol={symbols[t.instrument_id] ?? "?"} /></Link></td>
                   <td><DirectionBadge direction={t.direction} /></td>
-                  <td className="text-muted">{t.session ? SESSION_LABELS[t.session] : "—"}</td>
+                  <td className="text-muted">{t.session ? L.labels.sessions[t.session] : "—"}</td>
                   <td className="max-w-40 truncate text-muted">{t.strategy_id ? strategies[t.strategy_id] : "—"}</td>
                   {!compact ? (
-                    <td className="max-w-44 truncate text-muted" title={TRADE_TYPE_LABELS[t.trade_type]}>
-                      {accounts[t.account_id]}{t.is_sample ? <Badge tone="warn" className="ml-1.5">Sample</Badge> : null}
+                    <td className="max-w-44 truncate text-muted" title={L.labels.tradeTypes[t.trade_type]}>
+                      {accounts[t.account_id]}{t.is_sample ? <Badge tone="warn" className="ml-1.5">{L.common.sample}</Badge> : null}
                     </td>
                   ) : null}
                   <td className="num text-right">{t.max_position}</td>
@@ -135,14 +138,14 @@ export function TradeTable({ rows, symbols, accounts, strategies, tz, compact, s
                   <td className={cx("num text-right", (t.r_multiple ?? 0) > 0 && "text-profit", (t.r_multiple ?? 0) < 0 && "text-loss")}>{fmtR(t.r_multiple)}</td>
                   {!compact ? <td className="num text-right text-muted">{formatDuration(t.holding_seconds)}</td> : null}
                   {!compact ? (
-                    <td>{t.followed_rules === true ? <Badge tone="profit">✓ Yes</Badge> : t.followed_rules === false ? <Badge tone="loss">✕ No</Badge> : <span className="text-faint">—</span>}</td>
+                    <td>{t.followed_rules === true ? <Badge tone="profit">✓ {L.common.yes}</Badge> : t.followed_rules === false ? <Badge tone="loss">✕ {L.common.no}</Badge> : <span className="text-faint">—</span>}</td>
                   ) : null}
-                  <td>{t.status === "open" ? <Badge tone="warn">Open</Badge> : <Badge>Closed</Badge>}</td>
+                  <td>{t.status === "open" ? <Badge tone="warn">{L.common.open_}</Badge> : <Badge>{L.common.closed}</Badge>}</td>
                 </tr>
               );
             })}
             {!view.length ? (
-              <tr><td colSpan={14} className="py-10 text-center text-sm text-faint">No trades match “{q}”.</td></tr>
+              <tr><td colSpan={14} className="py-10 text-center text-sm text-faint">{fmt(L.table.noMatchQ, { q })}</td></tr>
             ) : null}
           </tbody>
         </table>

@@ -7,13 +7,13 @@ export function cx(...parts: (string | false | null | undefined)[]) {
 
 export function PageHeader({ title, subtitle, actions, eyebrow }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        {eyebrow ? <div className="eyebrow mb-1">{eyebrow}</div> : null}
-        <h1 className="text-[22px] font-semibold leading-tight tracking-tight">{title}</h1>
-        {subtitle ? <div className="mt-1 text-sm text-muted">{subtitle}</div> : null}
+    <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
+      <div className="min-w-0 max-w-3xl">
+        {eyebrow ? <div className="eyebrow mb-2">{eyebrow}</div> : null}
+        <h1 className="text-[28px] font-extrabold leading-tight tracking-tight md:text-[36px]">{title}</h1>
+        {subtitle ? <div className="mt-2 text-[15px] leading-relaxed text-muted">{subtitle}</div> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap items-center gap-2.5">{actions}</div> : null}
     </div>
   );
 }
@@ -97,9 +97,9 @@ export function DirectionBadge({ direction }: { direction: "long" | "short" }) {
 
 export function Empty({ title, children, icon, action }: { title: string; children?: ReactNode; icon?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-dashed border-line-strong bg-surface/50 px-6 py-12 text-center">
-      {icon ? <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">{icon}</div> : null}
-      <div className="font-semibold">{title}</div>
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-line-strong bg-surface/60 px-6 py-14 text-center">
+      {icon ? <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">{icon}</div> : null}
+      <div className="text-base font-bold">{title}</div>
       {children ? <div className="mt-1 max-w-md text-sm text-muted">{children}</div> : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
@@ -148,4 +148,55 @@ export function SectionTitle({ children, description, icon }: { children: ReactN
 /** Coloured signed P/L text with explicit + / − sign. */
 export function Pnl({ value, children, className }: { value: number | null | undefined; children: ReactNode; className?: string }) {
   return <span className={cx("num", value != null && value > 0 && "text-profit", value != null && value < 0 && "text-loss", className)}>{children}</span>;
+}
+
+/** Circular progress ring (0–1). Purely presentational; value is also shown as text by the caller. */
+export function Ring({ value, size = 56, stroke = 6 }: { value: number; size?: number; stroke?: number }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(1, value));
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden className="shrink-0 -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-3)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--accent)" strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={`${c * v} ${c}`} />
+    </svg>
+  );
+}
+
+/**
+ * ICEOFF-style KPI card: icon + label, big value with a small secondary figure, and an optional
+ * progress bar — only pass `progress` when the ratio is real (e.g. wins ÷ closed trades).
+ */
+export function StatCard({ icon, label, value, aside, hint, tone, progress, highlight, ring, className }: {
+  icon?: ReactNode; label: ReactNode; value: ReactNode; aside?: ReactNode; hint?: ReactNode; tone?: "profit" | "loss" | null;
+  progress?: number | null; highlight?: boolean; ring?: number | null; className?: string;
+}) {
+  return (
+    <div className={cx(
+      "relative flex min-w-0 flex-col justify-between gap-3 rounded-2xl border p-5",
+      highlight ? "border-accent/50 bg-gradient-to-br from-accent-soft to-surface" : "border-line bg-surface",
+      className,
+    )}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-fg/90">
+            {icon ? <span className="text-accent">{icon}</span> : null}
+            <span className="truncate">{label}</span>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className={cx("num truncate text-[30px] font-bold leading-none tracking-tight", tone === "profit" && "text-profit", tone === "loss" && "text-loss")}>{value}</span>
+            {aside ? <span className="num truncate text-xs font-medium text-muted">{aside}</span> : null}
+          </div>
+        </div>
+        {ring != null ? <Ring value={ring} /> : null}
+      </div>
+      {progress != null ? (
+        <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden>
+          <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(0, Math.min(1, progress)) * 100}%` }} />
+        </div>
+      ) : null}
+      {hint ? <div className="truncate text-xs text-muted">{hint}</div> : null}
+    </div>
+  );
 }
